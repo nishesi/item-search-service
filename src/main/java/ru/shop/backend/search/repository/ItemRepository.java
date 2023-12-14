@@ -11,166 +11,211 @@ import java.util.List;
 public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Integer> {
 
 
-    @Query("{\n" +
-            "    \"multi_match\": {\n" +
-            "      \"fields\":  [ \"type^2\", \"name^2\", \"description\"],\n" +
-            "      \"operator\":   \"AND\",\n" +
-            "        \"query\" : \"?0\",\n" +
-            "      \"fuzziness\" :1, \n" +
-            "        \"boost\": \"1\",\n" +
-            "       \"analyzer\" : \"russian\"\n" +
-            "      }\n" +
-            "    }\n")
+    @Query("{" +
+            "  \"multi_match\": {" +
+            "    \"fields\": [" +
+            "      \"type^2\"," +
+            "      \"name^2\"," +
+            "      \"description\"" +
+            "    ]," +
+            "    \"operator\": \"AND\"," +
+            "    \"query\": \"?0\"," +
+            "    \"fuzziness\": 1," +
+            "    \"boost\": \"1\"," +
+            "    \"analyzer\": \"russian\"" +
+            "  }" +
+            "}")
     List<ItemElastic> find(String name, Pageable pageable);
 
-    @Query("{\"match\": {\n" +
-            "      \"type\": {\n" +
-            "        \"query\": \"?0\",\n" +
-            "        \"fuzziness\": \"2\"\n" +
-            "      }\n" +
-            "    }}")
+    @Query("{" +
+            "  \"match\": {" +
+            "    \"type\": {" +
+            "      \"query\": \"?0\"," +
+            "      \"fuzziness\": \"2\"" +
+            "    }" +
+            "  }" +
+            "}")
     List<ItemElastic> findAllByType(String name, Pageable pageable);
 
-    @Query("{\"match\": {\n" +
-            "      \"brand\": {\n" +
-            "        \"query\": \"?0\",\n" +
-            "        \"fuzziness\": \"1\",\n" +
-            "        \"boost\": \"1\"\n" +
-            "      }\n" +
-            "    }}")
+    @Query("{" +
+            "  \"match\": {" +
+            "    \"brand\": {" +
+            "      \"query\": \"?0\"," +
+            "      \"fuzziness\": \"1\"," +
+            "      \"boost\": \"1\"" +
+            "    }" +
+            "  }" +
+            "}")
     List<ItemElastic> findAllByBrand(String name, Pageable pageable);
 
-    @Query("{\n" +
-            "\"bool\": { \n" +
-            "      \"must\": [\n" +
-            "        {\n" +
-            "        \"multi_match\": {\n" +
-            "          \"query\": \"?0\",\n" +
-            "        \"fuzziness\": \"1\",\n" +
-            "        \"boost\": \"1\",\n" +
-            "       \"analyzer\" : \"russian\",\n" +
-            "\"operator\":   \"AND\" ,\n" +
-            "          \"fields\": [\n" +"\"name^4\", \"description\", \"type\"\n" +
-            "          ]\n" +
-            "        }\n" +
-            "      }    ],\n" +
-            "      \n" +
-            "      \"filter\":  [{\"match\":{\n" +
-            "                    \"brand\": \n" +
-            "                        \"?1\"}\n" +
-            "                    }]\n" +
-            "      \n" +
-            "    }\n" +
+    @Query("{" +
+            "  \"bool\": {" +
+            "    \"must\": [" +
+            "      {" +
+            "        \"multi_match\": {" +
+            "          \"query\": \"?0\"," +
+            "          \"fuzziness\": \"1\"," +
+            "          \"boost\": \"1\"," +
+            "          \"analyzer\": \"russian\"," +
+            "          \"operator\": \"AND\"," +
+            "          \"fields\": [" +
+            "            \"name^4\"," +
+            "            \"description\"," +
+            "            \"type\"" +
+            "          ]" +
+            "        }" +
+            "      }" +
+            "    ]," +
+            "    \"filter\": [" +
+            "      {" +
+            "        \"match\": {" +
+            "          \"brand\": \"?1\"" +
+            "        }" +
+            "      }" +
+            "    ]" +
+            "  }" +
             "}")
     List<ItemElastic> findAllByBrand(String text, String brand, Pageable pageable);
 
-@Query("{\"match\": {\n" +
-        "      \"fulltext\": {\n" +
-        "        \"query\": \"?0\",\n" +
-        "        \"fuzziness\": \"2\"\n" +
-        "      }\n" +
-        "    }}")
+@Query("{" +
+        "  \"match\": {" +
+        "    \"fulltext\": {" +
+        "      \"query\": \"?0\"," +
+        "      \"fuzziness\": \"2\"" +
+        "    }" +
+        "  }" +
+        "}")
     List<ItemElastic> findAllNotStrong(String text, Pageable pageable);
 
-    @Query("{\"match\": {\n" +
-            "      \"catalogue\": {\n" +
-            "        \"query\": \"?0\",\n" +
-            "        \"fuzziness\": \"1\",\n" +
-            "        \"boost\": \"1\"\n" +
-            "      }\n" +
-            "    }}")
+    @Query("{" +
+            "  \"match\": {" +
+            "    \"catalogue\": {" +
+            "      \"query\": \"?0\"," +
+            "      \"fuzziness\": \"1\"," +
+            "      \"boost\": \"1\"" +
+            "    }" +
+            "  }" +
+            "}")
     List<ItemElastic> findByCatalogue(String text, Pageable pageable);
 
-    @Query("{\n" +
-            "\"bool\": { \n" +
-            "      \"must\": [\n" +
-            "        {\n" +
-            "        \"multi_match\": {\n" +
-            "          \"query\": \"?0\",\n" +
-            "        \"fuzziness\": \"1\",\n" +
-            "        \"boost\": \"1\",\n" +
-            "       \"analyzer\" : \"russian\",\n" +
-            "\"operator\":   \"AND\" ,\n" +
-            "          \"fields\": [\n" +"\"name^4\", \"description\", \"type\"\n" +
-            "          ]\n" +
-            "        }\n" +
-            "      }    ],\n" +
-            "      \n" +
-            "      \"filter\":  [{\"match\":{\n" +
-            "                    \"type\": \n" +
-            "                        \"?1\"}\n" +
-            "                    }]\n" +
-            "    }\n" +
+    @Query("{" +
+            "  \"bool\": {" +
+            "    \"must\": [" +
+            "      {" +
+            "        \"multi_match\": {" +
+            "          \"query\": \"?0\"," +
+            "          \"fuzziness\": \"1\"," +
+            "          \"boost\": \"1\"," +
+            "          \"analyzer\": \"russian\"," +
+            "          \"operator\": \"AND\"," +
+            "          \"fields\": [" +
+            "            \"name^4\"," +
+            "            \"description\"," +
+            "            \"type\"" +
+            "          ]" +
+            "        }" +
+            "      }" +
+            "    ]," +
+            "    \"filter\": [" +
+            "      {" +
+            "        \"match\": {" +
+            "          \"type\": \"?1\"" +
+            "        }" +
+            "      }" +
+            "    ]" +
+            "  }" +
             "}")
-
     List<ItemElastic> findAllByType(String text, String type, Pageable pageable);
-    @Query("{\n" +
-            "\"bool\": { \n" +
-            "      \"must\": [\n" +
-            "        {\n" +
-            "        \"multi_match\": {\n" +
-            "          \"query\": \"?0\",\n" +
-            "\t\t\t\"fuzziness\" :2,\n" +
-            "        \"boost\": \"1\",\n" +
-            "       \"analyzer\" : \"russian\",\n" +
-            "\"operator\":   \"AND\" ,\n" +
-            "          \"fields\": [\n" +"\"name^4\", \"description\", \"type\"\n" +
-            "          ]\n" +
-            "        }\n" +
-            "      }    ],\n" +
-            "      \n" +
-            "      \"filter\":  [{\"match\":{\n" +
-            "                    \"brand\": \n" +
-            "                        \"?1\"}\n" +
-            "                    }]\n" +
-            "    }\n" +
+    @Query("{" +
+            "  \"bool\": {" +
+            "    \"must\": [" +
+            "      {" +
+            "        \"multi_match\": {" +
+            "          \"query\": \"?0\"," +
+            "          \"fuzziness\": 2," +
+            "          \"boost\": \"1\"," +
+            "          \"analyzer\": \"russian\"," +
+            "          \"operator\": \"AND\"," +
+            "          \"fields\": [" +
+            "            \"name^4\"," +
+            "            \"description\"," +
+            "            \"type\"" +
+            "          ]" +
+            "        }" +
+            "      }" +
+            "    ]," +
+            "    \"filter\": [" +
+            "      {" +
+            "        \"match\": {" +
+            "          \"brand\": \"?1\"" +
+            "        }" +
+            "      }" +
+            "    ]" +
+            "  }" +
             "}")
     List<ItemElastic> findAllByTypeAndBrand(String text, String brand, String type, Pageable pageable);
 
-    @Query("{\n" +
-            "\"bool\": { \n" +
-            "      \"must\": [\n" +
-            "{\"match\": {\n" +
-            "      \"type\": {\n" +
-            "        \"query\": \"?0\",\n" +
-            "        \"fuzziness\": \"2\",\n" +
-            "        \"boost\": \"1\"\n" +
-            "      }\n" +
-            "    }}  ],\n" +
-            "      \n" +
-            "      \"filter\":  [{\"match\":{\n" +
-            "                    \"catalogueId\": \n" +
-            "                        \"?1\"}\n" +
-            "                    }]\n" +
-            "    }\n" +
+    @Query("{" +
+            "  \"bool\": {" +
+            "    \"must\": [" +
+            "      {" +
+            "        \"match\": {" +
+            "          \"type\": {" +
+            "            \"query\": \"?0\"," +
+            "            \"fuzziness\": \"2\"," +
+            "            \"boost\": \"1\"" +
+            "          }" +
+            "        }" +
+            "      }" +
+            "    ]," +
+            "    \"filter\": [" +
+            "      {" +
+            "        \"match\": {" +
+            "          \"catalogueId\": \"?1\"" +
+            "        }" +
+            "      }" +
+            "    ]" +
+            "  }" +
             "}")
     List<ItemElastic> find(String text, Long catalogueId, Pageable pageable);
-    @Query("{\n" +
-            "\"bool\": { \n" +
-            "      \"must\": [\n" +
-            "{\"match\": {\n" +
-            "      \"type\": {\n" +
-            "        \"query\": \"?0\",\n" +
-            "        \"fuzziness\": \"2\"\n" +
-            "      }\n" +
-            "    }}  ],\n" +
-            "      \n" +
-            "      \"filter\":  [{\"match\":{\n" +
-            "                    \"type\": \n" +
-            "                        \"?2\"}\n" +
-            "                    },{\"match\":{\n" +
-            "                    \"catalogueId\": \n" +
-            "                        \"?1\"}\n" +
-            "                    }]\n" +
-            "    }\n" +
+    @Query("{" +
+            "  \"bool\": {" +
+            "    \"must\": [" +
+            "      {" +
+            "        \"match\": {" +
+            "          \"type\": {" +
+            "            \"query\": \"?0\"," +
+            "            \"fuzziness\": \"2\"" +
+            "          }" +
+            "        }" +
+            "      }" +
+            "    ]," +
+            "    \"filter\": [" +
+            "      {" +
+            "        \"match\": {" +
+            "          \"type\": \"?2\"" +
+            "        }" +
+            "      }," +
+            "      {" +
+            "        \"match\": {" +
+            "          \"catalogueId\": \"?1\"" +
+            "        }" +
+            "      }" +
+            "    ]" +
+            "  }" +
             "}")
     List<ItemElastic> find(String text, Long catalogueId, String type, Pageable pageable);
-    @Query("{\"term\": {\n" +
-            "      \"item_id\":  \"?0\"\n" +
-            "    }}")
+    @Query("{" +
+            "  \"term\": {" +
+            "    \"item_id\": \"?0\"" +
+            "  }" +
+            "}")
     List<ItemElastic> findByItemId(String itemId, PageRequest of);
 
-    @Query("{\"regexp\": {\n" +
-            "      \"name\": \"?0\" }}")
+    @Query("{" +
+            "  \"regexp\": {" +
+            "    \"name\": \"?0\"" +
+            "  }" +
+            "}")
     List<ItemElastic> findAllByName(String name, Pageable pageable);
 }
