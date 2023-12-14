@@ -8,7 +8,6 @@ import ru.shop.backend.search.model.*;
 import ru.shop.backend.search.repository.ItemDbRepository;
 import ru.shop.backend.search.repository.ItemRepository;
 
-import javax.xml.catalog.Catalog;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -45,6 +44,7 @@ public class SearchService {
             try {
                 result = getByItemId(itemId.toString());
             } catch (Exception e) {
+                //NPE
             }
         }
         if(result == null) {
@@ -281,5 +281,24 @@ public class SearchService {
     }
     public List<CatalogueElastic> getAllFull(String text) {
         return getAll(text, pageable);
+    }
+
+    public SearchResultElastic getSearchResultElastic(String text) {
+        if (isNumeric(text)) {
+            Integer itemId = repoDb.findBySku(text).stream().findFirst().orElse(null);
+            if (itemId == null) {
+                var catalogue = getByName(text);
+                if (!catalogue.isEmpty()) {
+                    return new SearchResultElastic(catalogue);
+                }
+                return new SearchResultElastic(getAllFull(text));
+            }
+            try {
+                return new SearchResultElastic(getByItemId(itemId.toString()));
+            } catch (Exception e) {
+                //
+            }
+        }
+        return new SearchResultElastic(getAllFull(text));
     }
 }
