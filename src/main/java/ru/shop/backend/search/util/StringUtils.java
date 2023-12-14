@@ -1,4 +1,4 @@
-package ru.shop.backend.search.service;
+package ru.shop.backend.search.util;
 
 public class StringUtils {
     public static Boolean isContainErrorChar(String text){

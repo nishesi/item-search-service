@@ -1,4 +1,4 @@
-package ru.shop.backend.search.service;
+package ru.shop.backend.search.chain;
 
 import org.springframework.data.domain.Pageable;
 
