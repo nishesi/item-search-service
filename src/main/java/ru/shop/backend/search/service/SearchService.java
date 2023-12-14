@@ -11,8 +11,11 @@ import ru.shop.backend.search.repository.ItemRepository;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.lang3.StringUtils.isNumeric;
+import static ru.shop.backend.search.service.StringUtils.convert;
+import static ru.shop.backend.search.service.StringUtils.isContainErrorChar;
 
 @Service
 @RequiredArgsConstructor
@@ -23,14 +26,6 @@ public class SearchService {
     private Pageable pageable = PageRequest.of(0, 150);
     private Pageable pageableSmall = PageRequest.of(0, 10);
 
-    private static Pattern pattern = Pattern.compile("\\d+");
-
-    public static boolean isNumeric(String strNum) {
-        if (strNum == null) {
-            return false;
-        }
-        return pattern.matcher(strNum).matches();
-    }
     public synchronized SearchResult getSearchResult(Integer regionId, String text){
         List<CatalogueElastic> result = null;
         if (isNumeric(text)) {
@@ -48,7 +43,7 @@ public class SearchService {
             }
         }
         if(result == null) {
-            result = getAll(text);
+            result = getAll(text, pageableSmall);
         }
         List<Item> items = repoDb.findByIds(regionId,
                     result.stream()
@@ -87,9 +82,6 @@ public class SearchService {
                         ((result.get(0).getItems().get(0).getType()!=null?result.get(0).getItems().get(0).getType():"") +
                         " " + (result.get(0).getBrand()!=null?result.get(0).getBrand():"")).trim()))):new ArrayList<>()
         );
-    }
-    public synchronized List<CatalogueElastic> getAll(String text){
-        return getAll(text, pageableSmall);
     }
 
     public List<CatalogueElastic> getAll(String text, Pageable pageable){
@@ -232,55 +224,17 @@ public class SearchService {
             ItemElastic i = searchedItem.get();
             return Collections.singletonList(new CatalogueElastic(i.getCatalogue(), i.getCatalogueId(), Collections.singletonList(i),brand));
         }
-        List<CatalogueElastic> cats = new ArrayList<>();
         String finalBrand = brand;
         return map.keySet().stream().map(c ->
                 new CatalogueElastic(c, map.get(c).get(0).getCatalogueId(), map.get(c), finalBrand)).collect(Collectors.toList());
     }
     public List<CatalogueElastic> getByName(String num){
-        List<ItemElastic> list = new ArrayList<>();
-        list = repo.findAllByName(".*" + num + ".*", pageable);
+        List<ItemElastic> list = repo.findAllByName(".*" + num + ".*", pageable);
         return get(list, num, "");
     }
     public List<CatalogueElastic> getByItemId(String itemId) {
         var list = repo.findByItemId(itemId, PageRequest.of(0, 1));
         return Collections.singletonList(new CatalogueElastic(list.get(0).getCatalogue(), list.get(0).getCatalogueId(), list, list.get(0).getBrand()));
-    }
-
-    public static String convert(String message) {
-        boolean result = message.matches(".*\\p{InCyrillic}.*");
-        char[] ru = {'й','ц','у','к','е','н','г','ш','щ','з','х','ъ','ф','ы','в','а','п','р','о','л','д','ж','э', 'я','ч', 'с','м','и','т','ь','б', 'ю','.',
-                ' ','0','1','2','3','4','5','6','7','8','9','-'};
-        char[] en = {'q','w','e','r','t','y','u','i','o','p','[',']','a','s','d','f','g','h','j','k','l',';','"','z','x','c','v','b','n','m',',','.','/',
-                ' ','0','1','2','3','4','5','6','7','8','9','-'};
-        StringBuilder builder = new StringBuilder();
-
-        if (result) {
-            for (int i = 0; i < message.length(); i++) {
-                for (int j = 0; j < ru.length; j++ ) {
-                    if (message.charAt(i) == ru[j]) {
-                        builder.append(en[j]);
-                    }
-                }
-            }
-        } else {
-            for (int i = 0; i < message.length(); i++) {
-                for (int j = 0; j < en.length; j++ ) {
-                    if (message.charAt(i) == en[j]) {
-                        builder.append(ru[j]);
-                    }
-                }
-            }
-        }
-        return builder.toString();
-    }
-    private Boolean isContainErrorChar(String text){
-        if(text.contains("[") || text.contains("]") || text.contains("\"") || text.contains("/") || text.contains(";"))
-            return true;
-        return false;
-    }
-    public List<CatalogueElastic> getAllFull(String text) {
-        return getAll(text, pageable);
     }
 
     public SearchResultElastic getSearchResultElastic(String text) {
@@ -291,7 +245,7 @@ public class SearchService {
                 if (!catalogue.isEmpty()) {
                     return new SearchResultElastic(catalogue);
                 }
-                return new SearchResultElastic(getAllFull(text));
+                return new SearchResultElastic(getAll(text, pageable));
             }
             try {
                 return new SearchResultElastic(getByItemId(itemId.toString()));
@@ -299,6 +253,6 @@ public class SearchService {
                 //
             }
         }
-        return new SearchResultElastic(getAllFull(text));
+        return new SearchResultElastic(getAll(text, pageable));
     }
 }
