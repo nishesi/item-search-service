@@ -26,76 +26,117 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
         return Optional.of(result);
     }
 
-    public List<CatalogueElastic> findByAnyOccurrence(String text, Pageable pageable) {
-        String type = "";
-        List<ItemElastic> list;
-        String brand = "", text2 = text;
-        Long catalogueId = null;
-        boolean needConvert = true;
-        if (isContainErrorChar(text)) {
-            text = convert(text);
-            needConvert = false;
-        }
-        if (needConvert && isContainErrorChar(convert(text))) {
-            needConvert = false;
-        }
-        if (text.contains(" "))
-            for (String queryWord : text.split("\\s")) {
-                list = repo.findAllByBrand(queryWord, pageable);
-                if (list.isEmpty() && needConvert) {
-                    list = repo.findAllByBrand(convert(text), pageable);
-                }
-                if (!list.isEmpty()) {
-                    text = text.replace(queryWord, "").trim().replace("  ", " ");
-                    brand = list.get(0).getBrand();
-                    break;
+    private List<CatalogueElastic> findByAnyOccurrence(String text, Pageable pageable) {
+        List<String> words = new ArrayList<>();
+        boolean needConvert = parseAndAssertNeedConvert(text, words);
+        words.remove("");
 
-                }
+        String brand = tryFindBrand(words, needConvert, pageable);
 
-            }
-        list = repo.findAllByType(text, pageable);
-        if (list.isEmpty() && needConvert) {
-            list = repo.findAllByType(convert(text), pageable);
-        }
-        if (!list.isEmpty()) {
-            type = list.stream()
-                    .map(ItemElastic::getType)
-                    .min(Comparator.comparingInt(String::length))
-                    .get();
-        } else {
-            for (String queryWord : text.split("\\s")) {
-                list = repo.findAllByType(queryWord, pageable);
-                if (list.isEmpty() && needConvert) {
-                    list = repo.findAllByType(convert(text), pageable);
-                }
-                if (!list.isEmpty()) {
-                    text = text.replace(queryWord, "");
-                    type = list.stream()
-                            .map(ItemElastic::getType)
-                            .min(Comparator.comparingInt(String::length))
-                            .get();
-                }
-            }
-        }
-        if (brand.isEmpty()) {
-            list = repo.findByCatalogue(text, pageable);
-            if (list.isEmpty() && needConvert) {
-                list = repo.findByCatalogue(convert(text), pageable);
-            }
-            if (!list.isEmpty()) {
-                catalogueId = list.get(0).getCatalogueId();
-            }
-        }
-        text = text.trim();
-        if (text.isEmpty() && !brand.isEmpty())
+        List<ItemElastic> list = new ArrayList<>();
+        String type = tryFindType(words, needConvert, list, pageable);
+
+        if (words.isEmpty() && !brand.isEmpty())
             return List.of(new CatalogueElastic(
                     list.get(0).getCatalogue(),
                     list.get(0).getCatalogueId(),
                     null,
                     brand));
-        text += "?";
+
+        Long catalogueId = tryFindCatalogueId(brand, words, needConvert, pageable);
+
+        list = findByCriteria(words, brand, type, catalogueId, pageable);
+
+        if (list.isEmpty()) {
+            return notStrongSearch(text, words, needConvert, brand, pageable);
+        }
+
+        return getMatchingOrGroupByCatalogue(list, words, brand);
+    }
+
+    private static boolean parseAndAssertNeedConvert(String text, List<String> words) {
+        if (isContainErrorChar(text)) {
+            words.addAll(List.of(convert(text).split("\\s")));
+            return false;
+        } else if (isContainErrorChar(convert(text))) {
+            words.addAll(List.of(text.split("\\s")));
+            return false;
+        } else {
+            words.addAll(List.of(text.split("\\s")));
+            return true;
+        }
+    }
+
+    private String tryFindBrand(List<String> words, boolean needConvert, Pageable pageable) {
+        if (words.size() > 1) {
+            for (String word : words) {
+                var list = repo.findAllByBrand(word, pageable);
+                if (list.isEmpty() && needConvert) {
+                    list = repo.findAllByBrand(convert(word), pageable);
+                }
+                if (!list.isEmpty()) {
+                    words.remove(word);
+                    return list.get(0).getBrand();
+                }
+            }
+        }
+        return "";
+    }
+
+    private String tryFindType(List<String> words, boolean needConvert, List<ItemElastic> list, Pageable pageable) {
+        String text = String.join(" ", words);
+        String type = "";
+
+        List<ItemElastic> local = repo.findAllByType(text, pageable);
+        if (local.isEmpty() && needConvert) {
+            local = repo.findAllByType(convert(text), pageable);
+        }
+
+        if (local.isEmpty()) {
+            for (String queryWord : words) {
+                local = repo.findAllByType(queryWord, pageable);
+                if (local.isEmpty() && needConvert) {
+                    local = repo.findAllByType(convert(queryWord), pageable);
+                }
+                if (!local.isEmpty()) {
+                    words.remove(queryWord);
+                    type = local.stream()
+                            .map(ItemElastic::getType)
+                            .min(Comparator.comparingInt(String::length))
+                            .get();
+                }
+            }
+        } else {
+            type = local.stream()
+                    .map(ItemElastic::getType)
+                    .min(Comparator.comparingInt(String::length))
+                    .get();
+        }
+
+        list.addAll(local);
+        return type;
+    }
+
+    private Long tryFindCatalogueId(String brand, List<String> words, boolean needConvert, Pageable pageable) {
+        String text = String.join(" ", words);
+
         if (brand.isEmpty()) {
-            type += "?";
+            var list = repo.findByCatalogue(text, pageable);
+            if (list.isEmpty() && needConvert) {
+                list = repo.findByCatalogue(convert(text), pageable);
+            }
+            if (!list.isEmpty()) {
+                return list.get(0).getCatalogueId();
+            }
+        }
+        return null;
+    }
+
+    private List<ItemElastic> findByCriteria(List<String> words, String brand, String type, Long catalogueId, Pageable pageable) {
+        String text = String.join(" ", words) + "?";
+        List<ItemElastic> list;
+
+        if (brand.isEmpty()) {
             if (catalogueId == null) {
                 if (type.isEmpty()) {
                     list = repo.find(text, pageable);
@@ -103,12 +144,14 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
                         list = repo.find(convert(text), pageable);
                     }
                 } else {
+                    type += "?";
                     list = repo.findAllByType(text, type, pageable);
                     if (list.isEmpty()) {
                         list = repo.findAllByType(convert(text), type, pageable);
                     }
                 }
             } else {
+                type += "?";
                 if (type.isEmpty()) {
                     list = repo.find(text, catalogueId, type, pageable);
                     if (list.isEmpty()) {
@@ -135,21 +178,20 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
                 }
             }
         }
-
-        if (list.isEmpty()) {
-            if (text2.contains(" "))
-                text = String.join(" ", text.split("\\s"));
-            text2 += "?";
-            list = repo.findAllNotStrong(text2, pageable);
-            if (list.isEmpty() && needConvert) {
-                list = repo.findAllByTypeAndBrand(convert(text2), brand, type, pageable);
-            }
-        }
-        return getMatchingOrGroupByCatalogue(list, text, brand);
+        return list;
     }
 
-    private static List<CatalogueElastic> getMatchingOrGroupByCatalogue(List<ItemElastic> list, String text, String brand) {
-        text = text.replace("?", "");
+    private List<CatalogueElastic> notStrongSearch(String text, List<String> words, boolean needConvert, String brand, Pageable pageable) {
+        text += "?";
+        List<ItemElastic> list = repo.findAllNotStrong(text, pageable);
+        if (list.isEmpty() && needConvert) {
+            list = repo.findAllNotStrong(convert(text), pageable);
+        }
+        return getMatchingOrGroupByCatalogue(list, words, brand);
+    }
+
+    private static List<CatalogueElastic> getMatchingOrGroupByCatalogue(List<ItemElastic> list, List<String> words, String brand) {
+        String text = String.join(" ", words);
         Map<String, List<ItemElastic>> map = new HashMap<>();
         ItemElastic searchedItem = null;
 

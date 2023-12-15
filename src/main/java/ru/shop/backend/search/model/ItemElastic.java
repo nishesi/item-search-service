@@ -48,28 +48,29 @@ public class ItemElastic {
 
     public ItemElastic(ItemEntity entity) {
         this.description = buildDescription(entity.getDescription());
-        this.fulltext = entity.getCatalogue()+ " " + entity.getType() + " " + entity.getName() + " " + description;
-        this.name = entity.getName().replace(entity.getBrand(),"").trim();
+        this.fulltext = entity.getCatalogue() + " " + entity.getType() + " " + entity.getName() + " " + description;
+        this.name = entity.getName().replace(entity.getBrand(), "").trim();
         this.itemId = entity.getItemId();
         this.catalogueId = entity.getCatalogueId();
         this.catalogue = entity.getCatalogue();
         this.brand = entity.getBrand();
         this.type = entity.getType();
     }
-    public String buildDescription(String description){
+
+    public String buildDescription(String description) {
         return Arrays.stream(description.split(";")).map(
                 d -> {
                     d = d.toLowerCase(Locale.ROOT);
-                    if(d.contains(": нет"))
+                    if (d.contains(": нет"))
                         return null;
-                    if(d.contains(": -"))
+                    if (d.contains(": -"))
                         return null;
-                    if(d.contains(": есть"))
+                    if (d.contains(": есть"))
                         return d.replace(": есть", "");
-                    if(d.contains(": 0 "))
+                    if (d.contains(": 0 "))
                         return null;
-                    return d.replace(":","");
+                    return d.replace(":", "");
                 }
-        ).filter( d -> d != null).collect(Collectors.joining());
+        ).filter(d -> d != null).collect(Collectors.joining());
     }
 }
