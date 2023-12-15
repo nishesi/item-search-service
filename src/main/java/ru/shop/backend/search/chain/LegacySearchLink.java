@@ -8,7 +8,6 @@ import ru.shop.backend.search.model.ItemElastic;
 import ru.shop.backend.search.repository.ItemRepository;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static ru.shop.backend.search.util.StringUtils.convert;
@@ -149,31 +148,35 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
         return getMatchingOrGroupByCatalogue(list, text, brand);
     }
 
-    public static List<CatalogueElastic> getMatchingOrGroupByCatalogue(List<ItemElastic> list, String name, String brand) {
+    private static List<CatalogueElastic> getMatchingOrGroupByCatalogue(List<ItemElastic> list, String text, String brand) {
+        text = text.replace("?", "");
         Map<String, List<ItemElastic>> map = new HashMap<>();
-        AtomicReference<ItemElastic> searchedItem = new AtomicReference<>();
-        list.forEach(i -> {
-            if (name.replace("?", "").equals(i.getName())) {
-                searchedItem.set(i);
+        ItemElastic searchedItem = null;
+
+        for (ItemElastic i : list) {
+            if (text.equals(i.getName())) {
+                searchedItem = i;
             }
-            if (name.replace("?", "").endsWith(i.getName()) && name.replace("?", "").startsWith(i.getType())) {
-                searchedItem.set(i);
+            if (text.endsWith(i.getName()) && text.startsWith(i.getType())) {
+                searchedItem = i;
             }
             if (!map.containsKey(i.getCatalogue())) {
                 map.put(i.getCatalogue(), new ArrayList<>());
             }
             map.get(i.getCatalogue()).add(i);
-        });
+        }
+
         if (brand.isEmpty())
             brand = null;
-        if (searchedItem.get() != null) {
-            ItemElastic i = searchedItem.get();
+
+        if (searchedItem != null) {
             return List.of(new CatalogueElastic(
-                    i.getCatalogue(),
-                    i.getCatalogueId(),
-                    List.of(i),
+                    searchedItem.getCatalogue(),
+                    searchedItem.getCatalogueId(),
+                    List.of(searchedItem),
                     brand));
         }
+
         String finalBrand = brand;
         return map.keySet().stream()
                 .map(c -> new CatalogueElastic(
