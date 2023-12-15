@@ -126,6 +126,7 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
 
     private String tryFindType(List<String> words, boolean needConvert, List<ItemElastic> list, Pageable pageable) {
         String type = "";
+        String text = String.join(" ", words);
 
         List<ItemElastic> local = List.of();
         for (String queryWord : new ArrayList<>(words)) {
@@ -142,6 +143,16 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
                         .get();
             }
         }
+//        List<ItemElastic> local = repo.findAllByType(text, pageable);
+//        if (local.isEmpty() && needConvert) {
+//            local = repo.findAllByType(convert(text), pageable);
+//        }
+//        if (!local.isEmpty()) {
+//            type = local.stream()
+//                    .map(ItemElastic::getType)
+//                    .min(Comparator.comparingInt(String::length))
+//                    .get();
+//        }
 
         list.addAll(local);
         return type;

@@ -59,7 +59,7 @@ values (1, 101, 1001, 'name_1', 'description_1', '/item_url1', 'type_1', 'some_i
        (12, 113, 1013, 'Iphone 13', 'description_1', '/item_url2', 'smartphone', 'some_image', 'Apple', 'USA'),
        (13, 113, 1013, 'Iphone 14', 'description_1', '/item_url2', 'smartphone', 'some_image', 'Apple', 'USA'),
        (15, 113, 1013, 'Mac Air', 'description_1', '/item_url2', 'notebook', 'some_image', 'Apple', 'USA'),
-       (16, 113, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image', 'Honor', 'USA'),
+       (16, 112, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image', 'Honor', 'Corey'),
        (14, 101, 1013, 'something 13 Air', 'description_1', '/item_url2', 'type_1', 'some_image', 'brand_1', 'catalogue_1'),
        (17, 113, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image', 'Honor', 'USA');
 

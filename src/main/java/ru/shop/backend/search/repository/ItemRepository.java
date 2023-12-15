@@ -171,7 +171,7 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "    \"filter\": [" +
             "      {" +
             "        \"match\": {" +
-            "          \"catalogueId\": \"?1\"" +
+            "          \"catalogue_id\": \"?1\"" +
             "        }" +
             "      }" +
             "    ]" +
@@ -198,7 +198,7 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "      }," +
             "      {" +
             "        \"match\": {" +
-            "          \"catalogueId\": \"?1\"" +
+            "          \"catalogue_id\": \"?1\"" +
             "        }" +
             "      }" +
             "    ]" +
