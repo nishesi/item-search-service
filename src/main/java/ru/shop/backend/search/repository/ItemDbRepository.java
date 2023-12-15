@@ -13,7 +13,8 @@ public interface ItemDbRepository  extends JpaRepository<ItemEntity, Long> {
             "i.name,            " +
             "r.price,           " +
             "i.itemurl as url,  " +
-            "i as image, i.type " +
+            "i as image,        " +
+            "i.type             " +
             "from item as i join remain as r " +
             "   on r.item_id = i.item_id and r.region_id = :regionId " +
             "where i.item_id in  :ids", nativeQuery = true)

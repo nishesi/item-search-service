@@ -18,6 +18,58 @@ import static ru.shop.backend.search.util.StringUtils.isContainErrorChar;
 public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
     private final ItemRepository repo;
 
+    private static boolean parseAndAssertNeedConvert(String text, List<String> words) {
+        if (isContainErrorChar(text)) {
+            words.addAll(List.of(convert(text).split("\\s")));
+            return false;
+        } else if (isContainErrorChar(convert(text))) {
+            words.addAll(List.of(text.split("\\s")));
+            return false;
+        } else {
+            words.addAll(List.of(text.split("\\s")));
+            return true;
+        }
+    }
+
+    private static List<CatalogueElastic> getMatchingOrGroupByCatalogue(List<ItemElastic> list, List<String> words, String brand) {
+        String text = String.join(" ", words);
+        Map<String, List<ItemElastic>> map = new HashMap<>();
+        ItemElastic searchedItem = null;
+
+        for (ItemElastic i : list) {
+            if (text.equals(i.getName())) {
+                searchedItem = i;
+            }
+            if (text.endsWith(i.getName()) && text.startsWith(i.getType())) {
+                searchedItem = i;
+            }
+            if (!map.containsKey(i.getCatalogue())) {
+                map.put(i.getCatalogue(), new ArrayList<>());
+            }
+            map.get(i.getCatalogue()).add(i);
+        }
+
+        if (brand.isEmpty())
+            brand = null;
+
+        if (searchedItem != null) {
+            return List.of(new CatalogueElastic(
+                    searchedItem.getCatalogue(),
+                    searchedItem.getCatalogueId(),
+                    List.of(searchedItem),
+                    brand));
+        }
+
+        String finalBrand = brand;
+        return map.keySet().stream()
+                .map(c -> new CatalogueElastic(
+                        c,
+                        map.get(c).get(0).getCatalogueId(),
+                        map.get(c),
+                        finalBrand))
+                .collect(Collectors.toList());
+    }
+
     @Override
     public Optional<List<CatalogueElastic>> find(String text, Pageable pageable) {
         List<CatalogueElastic> result = findByAnyOccurrence(text, pageable);
@@ -36,12 +88,14 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
         List<ItemElastic> list = new ArrayList<>();
         String type = tryFindType(words, needConvert, list, pageable);
 
-        if (words.isEmpty() && !brand.isEmpty())
+        if (words.isEmpty() && !brand.isEmpty()) {
+            //TODO never happens
             return List.of(new CatalogueElastic(
                     list.get(0).getCatalogue(),
                     list.get(0).getCatalogueId(),
                     null,
                     brand));
+        }
 
         Long catalogueId = tryFindCatalogueId(brand, words, needConvert, pageable);
 
@@ -54,22 +108,9 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
         return getMatchingOrGroupByCatalogue(list, words, brand);
     }
 
-    private static boolean parseAndAssertNeedConvert(String text, List<String> words) {
-        if (isContainErrorChar(text)) {
-            words.addAll(List.of(convert(text).split("\\s")));
-            return false;
-        } else if (isContainErrorChar(convert(text))) {
-            words.addAll(List.of(text.split("\\s")));
-            return false;
-        } else {
-            words.addAll(List.of(text.split("\\s")));
-            return true;
-        }
-    }
-
     private String tryFindBrand(List<String> words, boolean needConvert, Pageable pageable) {
         if (words.size() > 1) {
-            for (String word : words) {
+            for (String word : new ArrayList<>(words)) {
                 var list = repo.findAllByBrand(word, pageable);
                 if (list.isEmpty() && needConvert) {
                     list = repo.findAllByBrand(convert(word), pageable);
@@ -84,33 +125,22 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
     }
 
     private String tryFindType(List<String> words, boolean needConvert, List<ItemElastic> list, Pageable pageable) {
-        String text = String.join(" ", words);
         String type = "";
 
-        List<ItemElastic> local = repo.findAllByType(text, pageable);
-        if (local.isEmpty() && needConvert) {
-            local = repo.findAllByType(convert(text), pageable);
-        }
-
-        if (local.isEmpty()) {
-            for (String queryWord : words) {
-                local = repo.findAllByType(queryWord, pageable);
-                if (local.isEmpty() && needConvert) {
-                    local = repo.findAllByType(convert(queryWord), pageable);
-                }
-                if (!local.isEmpty()) {
-                    words.remove(queryWord);
-                    type = local.stream()
-                            .map(ItemElastic::getType)
-                            .min(Comparator.comparingInt(String::length))
-                            .get();
-                }
+        List<ItemElastic> local = List.of();
+        for (String queryWord : new ArrayList<>(words)) {
+            local = repo.findAllByType(queryWord, pageable);
+            if (local.isEmpty() && needConvert) {
+                local = repo.findAllByType(convert(queryWord), pageable);
             }
-        } else {
-            type = local.stream()
-                    .map(ItemElastic::getType)
-                    .min(Comparator.comparingInt(String::length))
-                    .get();
+            if (!local.isEmpty()) {
+                if (words.size() > 1)
+                    words.remove(queryWord);
+                type = local.stream()
+                        .map(ItemElastic::getType)
+                        .min(Comparator.comparingInt(String::length))
+                        .get();
+            }
         }
 
         list.addAll(local);
@@ -133,7 +163,8 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
     }
 
     private List<ItemElastic> findByCriteria(List<String> words, String brand, String type, Long catalogueId, Pageable pageable) {
-        String text = String.join(" ", words) + "?";
+        // '_' - prevent fuzzy search for last word
+        String text = String.join(" ", words) + "_";
         List<ItemElastic> list;
 
         if (brand.isEmpty()) {
@@ -144,7 +175,6 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
                         list = repo.find(convert(text), pageable);
                     }
                 } else {
-                    type += "?";
                     list = repo.findAllByType(text, type, pageable);
                     if (list.isEmpty()) {
                         list = repo.findAllByType(convert(text), type, pageable);
@@ -188,44 +218,5 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
             list = repo.findAllNotStrong(convert(text), pageable);
         }
         return getMatchingOrGroupByCatalogue(list, words, brand);
-    }
-
-    private static List<CatalogueElastic> getMatchingOrGroupByCatalogue(List<ItemElastic> list, List<String> words, String brand) {
-        String text = String.join(" ", words);
-        Map<String, List<ItemElastic>> map = new HashMap<>();
-        ItemElastic searchedItem = null;
-
-        for (ItemElastic i : list) {
-            if (text.equals(i.getName())) {
-                searchedItem = i;
-            }
-            if (text.endsWith(i.getName()) && text.startsWith(i.getType())) {
-                searchedItem = i;
-            }
-            if (!map.containsKey(i.getCatalogue())) {
-                map.put(i.getCatalogue(), new ArrayList<>());
-            }
-            map.get(i.getCatalogue()).add(i);
-        }
-
-        if (brand.isEmpty())
-            brand = null;
-
-        if (searchedItem != null) {
-            return List.of(new CatalogueElastic(
-                    searchedItem.getCatalogue(),
-                    searchedItem.getCatalogueId(),
-                    List.of(searchedItem),
-                    brand));
-        }
-
-        String finalBrand = brand;
-        return map.keySet().stream()
-                .map(c -> new CatalogueElastic(
-                        c,
-                        map.get(c).get(0).getCatalogueId(),
-                        map.get(c),
-                        finalBrand))
-                .collect(Collectors.toList());
     }
 }
