@@ -3,34 +3,43 @@ package ru.shop.backend.search.util;
 import java.util.List;
 
 public class StringUtils {
-    public static Boolean isContainErrorChar(String text){
+    private static final char[] RU = {
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-',
+            'й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ',
+            'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э',
+            'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю', '.',
+            ' ',};
+    private static final char[] EN = {
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-',
+            'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']',
+            'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '"',
+            'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/',
+            ' '};
+
+    public static Boolean isContainErrorChar(String text) {
         return text.contains("[") || text.contains("]")
                 || text.contains("\"") || text.contains("/")
                 || text.contains(";");
     }
 
     public static String convert(String message) {
-        boolean result = message.matches(".*\\p{InCyrillic}.*");
-        char[] ru = {'й','ц','у','к','е','н','г','ш','щ','з','х','ъ','ф','ы','в','а','п','р','о','л','д','ж','э', 'я','ч', 'с','м','и','т','ь','б', 'ю','.',
-                ' ','0','1','2','3','4','5','6','7','8','9','-'};
-        char[] en = {'q','w','e','r','t','y','u','i','o','p','[',']','a','s','d','f','g','h','j','k','l',';','"','z','x','c','v','b','n','m',',','.','/',
-                ' ','0','1','2','3','4','5','6','7','8','9','-'};
-        StringBuilder builder = new StringBuilder();
+        char[] from;
+        char[] to;
 
-        if (result) {
-            for (int i = 0; i < message.length(); i++) {
-                for (int j = 0; j < ru.length; j++ ) {
-                    if (message.charAt(i) == ru[j]) {
-                        builder.append(en[j]);
-                    }
-                }
-            }
+        if (message.matches(".*\\p{InCyrillic}.*")) {
+            from = RU;
+            to = EN;
         } else {
-            for (int i = 0; i < message.length(); i++) {
-                for (int j = 0; j < en.length; j++ ) {
-                    if (message.charAt(i) == en[j]) {
-                        builder.append(ru[j]);
-                    }
+            from = EN;
+            to = RU;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < message.length(); i++) {
+            for (int j = 0; j < EN.length; j++) {
+                if (message.charAt(i) == from[j]) {
+                    builder.append(to[j]);
+                    break;
                 }
             }
         }
@@ -38,15 +47,14 @@ public class StringUtils {
     }
 
     public static boolean parseAndAssertNeedConvert(String text, List<String> words) {
+        boolean needConvert = true;
         if (isContainErrorChar(text)) {
-            words.addAll(List.of(convert(text).split("\\s")));
-            return false;
+            text = convert(text);
+            needConvert = false;
         } else if (isContainErrorChar(convert(text))) {
-            words.addAll(List.of(text.split("\\s")));
-            return false;
-        } else {
-            words.addAll(List.of(text.split("\\s")));
-            return true;
+            needConvert = false;
         }
+        words.addAll(List.of(text.split("\\s")));
+        return needConvert;
     }
 }

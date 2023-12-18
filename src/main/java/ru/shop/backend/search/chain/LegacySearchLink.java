@@ -3,13 +3,12 @@ package ru.shop.backend.search.chain;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
-import ru.shop.backend.search.model.CatalogueElastic;
+import ru.shop.backend.search.dto.CatalogueElastic;
 import ru.shop.backend.search.model.ItemElastic;
-import ru.shop.backend.search.repository.ItemRepository;
+import ru.shop.backend.search.repository.ItemElasticRepository;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static ru.shop.backend.search.util.SearchUtils.*;
 import static ru.shop.backend.search.util.StringUtils.*;
@@ -17,7 +16,7 @@ import static ru.shop.backend.search.util.StringUtils.*;
 @Component
 @RequiredArgsConstructor
 public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
-    private final ItemRepository repo;
+    private final ItemElasticRepository itemElasticRepository;
 
     private static <T> List<T> findWithConvert(String text, boolean needConvert, Function<String, List<T>> function) {
         List<T> list = function.apply(text);
@@ -71,7 +70,7 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
     private String tryFindBrand(List<String> words, boolean needConvert, Pageable pageable) {
         if (words.size() > 1) {
             for (String word : new ArrayList<>(words)) {
-                var list = findWithConvert(word, needConvert, t -> repo.findAllByBrand(t, pageable));
+                var list = findWithConvert(word, needConvert, t -> itemElasticRepository.findAllByBrand(t, pageable));
                 if (!list.isEmpty()) {
                     words.remove(word);
                     return list.get(0).getBrand();
@@ -86,7 +85,7 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
 
         List<ItemElastic> local = List.of();
         for (String word : new ArrayList<>(words)) {
-            local = findWithConvert(word, needConvert, t -> repo.findAllByType(t, pageable));
+            local = findWithConvert(word, needConvert, t -> itemElasticRepository.findAllByType(t, pageable));
             if (!local.isEmpty()) {
                 if (words.size() > 1)
                     words.remove(word);
@@ -104,7 +103,7 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
     private Long tryFindCatalogueId(String brand, List<String> words, boolean needConvert, Pageable pageable) {
         if (brand.isEmpty()) {
             for (String word : new ArrayList<>(words)) {
-                var list = findWithConvert(word, needConvert, t -> repo.findByCatalogue(t, pageable));
+                var list = findWithConvert(word, needConvert, t -> itemElasticRepository.findByCatalogue(t, pageable));
                 if (!list.isEmpty()) {
                     words.remove(word);
                     return list.get(0).getCatalogueId();
@@ -122,25 +121,25 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
         if (brand.isEmpty()) {
             if (catalogueId == null) {
                 if (type.isEmpty()) {
-                    list = findWithConvert(text, true, t -> repo.find(t, pageable));
+                    list = findWithConvert(text, true, t -> itemElasticRepository.find(t, pageable));
                 } else {
-                    list = findWithConvert(text, true, t -> repo.findAllByType(t, type, pageable));
+                    list = findWithConvert(text, true, t -> itemElasticRepository.findAllByType(t, type, pageable));
                 }
             } else {
                 text += " " + type;
                 String fType = type + "?";
                 if (type.isEmpty()) {
-                    list = findWithConvert(text, true, t -> repo.find(t, catalogueId, fType, pageable));
+                    list = findWithConvert(text, true, t -> itemElasticRepository.find(t, catalogueId, fType, pageable));
                 } else {
-                    list = findWithConvert(text, true, t -> repo.find(t, catalogueId, pageable));
+                    list = findWithConvert(text, true, t -> itemElasticRepository.find(t, catalogueId, pageable));
                 }
             }
         } else {
             if (type.isEmpty()) {
-                list = findWithConvert(text, true, t -> repo.findAllByBrand(t, brand, pageable));
+                list = findWithConvert(text, true, t -> itemElasticRepository.findAllByBrand(t, brand, pageable));
             } else {
                 String fType = type + "?";
-                list = findWithConvert(text, true, t -> repo.findAllByTypeAndBrand(t, brand, fType, pageable));
+                list = findWithConvert(text, true, t -> itemElasticRepository.findAllByTypeAndBrand(t, brand, fType, pageable));
             }
         }
         return list;
@@ -148,7 +147,7 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
 
     private List<CatalogueElastic> notStrongSearch(String text, boolean needConvert, String brand, Pageable pageable) {
         text += "_";
-        var list = findWithConvert(text, needConvert, t -> repo.findAllNotStrong(t, pageable));
+        var list = findWithConvert(text, needConvert, t -> itemElasticRepository.findAllNotStrong(t, pageable));
         return groupByCatalogue(list, brand);
     }
 }

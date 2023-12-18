@@ -3,7 +3,7 @@ package ru.shop.backend.search.chain;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
-import ru.shop.backend.search.model.CatalogueElastic;
+import ru.shop.backend.search.dto.CatalogueElastic;
 
 import java.util.List;
 

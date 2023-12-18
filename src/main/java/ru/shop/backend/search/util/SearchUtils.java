@@ -1,6 +1,8 @@
 package ru.shop.backend.search.util;
 
-import ru.shop.backend.search.model.CatalogueElastic;
+import ru.shop.backend.search.dto.CatalogueElastic;
+import ru.shop.backend.search.dto.TypeHelpText;
+import ru.shop.backend.search.dto.TypeOfQuery;
 import ru.shop.backend.search.model.ItemElastic;
 
 import java.util.List;
@@ -35,5 +37,18 @@ public class SearchUtils {
                                 item.getCatalogueId(),
                                 List.of(item),
                                 brand)));
+    }
+
+    public static List<TypeHelpText> getTypeQueries(List<CatalogueElastic> catalogues, String brand) {
+        if (catalogues.isEmpty())
+            return List.of();
+        ItemElastic item = catalogues.get(0).getItems().get(0);
+        String type = item.getType();
+        if (type == null)
+            type = "";
+
+        return List.of(new TypeHelpText(
+                TypeOfQuery.SEE_ALSO,
+                (type + " " + brand).trim()));
     }
 }

@@ -5,76 +5,71 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.shop.backend.search.chain.SearchChain;
-import ru.shop.backend.search.model.*;
-import ru.shop.backend.search.repository.ItemDbRepository;
+import ru.shop.backend.search.converter.CatalogueConverter;
+import ru.shop.backend.search.converter.ItemConverter;
+import ru.shop.backend.search.dto.*;
+import ru.shop.backend.search.model.CatalogueWithParent;
+import ru.shop.backend.search.model.ItemElastic;
+import ru.shop.backend.search.model.ItemWithPrice;
+import ru.shop.backend.search.repository.CatalogueJpaRepository;
+import ru.shop.backend.search.repository.ItemJpaRepository;
 
-import java.math.BigInteger;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static ru.shop.backend.search.util.SearchUtils.getTypeQueries;
 
 @Service
 @RequiredArgsConstructor
 public class SearchService {
-    private final ItemDbRepository repoDb;
-    private final SearchChain searchChain;
-
     private static final Pageable PAGE_150 = PageRequest.of(0, 150);
     private static final Pageable PAGE_10 = PageRequest.of(0, 10);
+    private final SearchChain searchChain;
+    private final ItemJpaRepository itemJpaRepository;
+    private final CatalogueJpaRepository catalogueJpaRepository;
+    private final ItemConverter itemConverter;
+    private final CatalogueConverter catalogueConverter;
 
-    public synchronized SearchResult getSearchResult(Integer regionId, String text) {
-        List<CatalogueElastic> result = searchChain.searchByText(text, PAGE_10);
+    public SearchResult getSearchResult(Integer regionId, String text) {
+        List<CatalogueElastic> searchResult = searchChain.searchByText(text, PAGE_10);
+        List<ItemWithPrice> items = getItemsWithPrices(regionId, searchResult);
+        List<CatalogueWithParent> catalogues = getCataloguesWithParents(items);
 
-        List<Item> items = repoDb.findByIds(regionId,
-                        result.stream()
-                                .flatMap(category -> category.getItems().stream())
-                                .map(ItemElastic::getItemId)
-                                .collect(Collectors.toList()))
-                .stream()
-                .map(arr -> new Item(
-                        ((BigInteger) arr[2]).intValue(),
-                        arr[1].toString(),
-                        arr[3].toString(),
-                        arr[4].toString(),
-                        ((BigInteger) arr[0]).intValue(),
-                        arr[5].toString()))
-                .collect(Collectors.toList());
-        Set<String> catUrls = new HashSet<>();
-        String brand = null;
-        if (!result.isEmpty())
-            brand = result.get(0).getBrand();
-        if (brand == null) {
-            brand = "";
-        }
-        brand = brand.toLowerCase(Locale.ROOT);
-        String finalBrand = brand;
-        List<Category> categories = repoDb.findCatsByIds(
-                        items.stream()
-                                .map(Item::getItemId)
-                                .collect(Collectors.toList()))
-                .stream()
-                .map(arr -> {
-                    if (catUrls.contains(arr[2].toString()))
-                        return null;
-                    catUrls.add(arr[2].toString());
-                    return
-                            new Category(arr[0].toString(),
-                                    arr[1].toString(),
-                                    "/cat/" + arr[2].toString() + (finalBrand.isEmpty() ? "" : "/brands/" + finalBrand),
-                                    "/cat/" + arr[3].toString(), arr[4] == null ? null : arr[4].toString());
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        String brand = !searchResult.isEmpty() && searchResult.get(0).getBrand() != null
+                ? searchResult.get(0).getBrand().toLowerCase(Locale.ROOT)
+                : "";
+
         return new SearchResult(
-                items,
-                categories,
-                !result.isEmpty() ? (List.of(new TypeHelpText(TypeOfQuery.SEE_ALSO,
-                        ((result.get(0).getItems().get(0).getType() != null ? result.get(0).getItems().get(0).getType() : "") +
-                                " " + (result.get(0).getBrand() != null ? result.get(0).getBrand() : "")).trim()))) : new ArrayList<>()
+                itemConverter.toItem(items),
+                catalogueConverter.toCategory(catalogues, brand),
+                getTypeQueries(searchResult, brand)
         );
     }
 
     public SearchResultElastic getSearchResultElastic(String text) {
         List<CatalogueElastic> list = searchChain.searchByText(text, PAGE_150);
         return new SearchResultElastic(list);
+    }
+
+    private List<ItemWithPrice> getItemsWithPrices(Integer regionId, List<CatalogueElastic> result) {
+        List<Long> foundItemIds = result.stream()
+                .flatMap(category -> category.getItems().stream())
+                .map(ItemElastic::getItemId)
+                .collect(Collectors.toList());
+        return itemJpaRepository.findAllByRegionIdAndIdIn(regionId, foundItemIds);
+    }
+
+    private List<CatalogueWithParent> getCataloguesWithParents(List<ItemWithPrice> items) {
+        var foundItemIds = items.stream()
+                .map(ItemWithPrice::getCatalogueId)
+                .collect(Collectors.toList());
+        Set<String> uniqueUrls = new HashSet<>();
+        return catalogueJpaRepository.findAllWithParentByIdIn(foundItemIds)
+                .stream()
+                .filter(c -> uniqueUrls.add(c.getUrl()))
+                .collect(Collectors.toList());
     }
 }

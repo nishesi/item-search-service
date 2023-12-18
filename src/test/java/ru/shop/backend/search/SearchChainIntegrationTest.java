@@ -15,15 +15,13 @@ import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import ru.shop.backend.search.chain.SearchChain;
 import ru.shop.backend.search.model.ItemElastic;
-import ru.shop.backend.search.repository.ItemDbRepository;
-import ru.shop.backend.search.service.ReindexSearchService;
+import ru.shop.backend.search.repository.ItemJpaRepository;
 import ru.shop.backend.search.util.SimpleElasticsearchContainer;
 import ru.shop.backend.search.util.SimplePostgresContainer;
 
@@ -50,19 +48,13 @@ public class SearchChainIntegrationTest {
             .withInitScript("test-schema.sql");
 
     @Autowired
-    ItemDbRepository itemJpaRepository;
-
-    @Autowired
-    ReindexSearchService schedulingService;
+    ItemJpaRepository itemJpaRepository;
 
     @Autowired
     EntityManager entityManager;
 
     @Autowired
     ElasticsearchRestTemplate elasticTemplate;
-
-    @Autowired
-    MockMvc mockMvc;
 
     @Autowired
     SearchChain searchChain;
@@ -108,7 +100,7 @@ public class SearchChainIntegrationTest {
                     "spring.datasource.url=" + postgres.getJdbcUrl(),
                     "spring.datasource.username=" + postgres.getUsername(),
                     "spring.datasource.password=" + postgres.getPassword(),
-                    "spring.elasticsearch.rest.uris=127.0.0.1:9201",
+                    "spring.elasticsearch.rest.uris=" + elastic.getHttpHostAddress(),
                     "spring.datasource.driver-class-name=org.postgresql.Driver"
             ).applyTo(configurableApplicationContext.getEnvironment());
         }

@@ -17,7 +17,7 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import ru.shop.backend.search.model.ItemElastic;
-import ru.shop.backend.search.repository.ItemRepository;
+import ru.shop.backend.search.repository.ItemElasticRepository;
 import ru.shop.backend.search.util.SimpleElasticsearchContainer;
 import ru.shop.backend.search.util.SimplePostgresContainer;
 
@@ -45,7 +45,7 @@ public class ItemElasticsearchRepositoryIntegrationTest {
     ElasticsearchRestTemplate template;
 
     @Autowired
-    ItemRepository itemRepository;
+    ItemElasticRepository itemElasticRepository;
 
 
     @BeforeAll
@@ -83,7 +83,7 @@ public class ItemElasticsearchRepositoryIntegrationTest {
     void should_return_first_result() {
         assertThatNoException()
                 .isThrownBy(() -> {
-                    Optional<ItemElastic> result = itemRepository.findByItemId(1L);
+                    Optional<ItemElastic> result = itemElasticRepository.findByItemId(1L);
                     assertThat(result)
                             .isPresent()
                             .get()

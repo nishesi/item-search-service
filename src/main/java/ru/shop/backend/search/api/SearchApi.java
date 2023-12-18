@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import ru.shop.backend.search.model.SearchResult;
-import ru.shop.backend.search.model.SearchResultElastic;
+import ru.shop.backend.search.dto.SearchResult;
+import ru.shop.backend.search.dto.SearchResultElastic;
 
 @RequestMapping("/api/search")
 @Tag(name = "Поиск", description = "Методы поиска")

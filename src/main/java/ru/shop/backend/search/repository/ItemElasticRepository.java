@@ -1,6 +1,5 @@
 package ru.shop.backend.search.repository;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -9,7 +8,7 @@ import ru.shop.backend.search.model.ItemElastic;
 import java.util.List;
 import java.util.Optional;
 
-public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Integer> {
+public interface ItemElasticRepository extends ElasticsearchRepository<ItemElastic, Integer> {
 
 
     @Query("{" +
