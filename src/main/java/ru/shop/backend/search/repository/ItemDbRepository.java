@@ -21,7 +21,7 @@ public interface ItemDbRepository  extends JpaRepository<ItemEntity, Long> {
     List<Object[]> findByIds(Integer regionId, List<Long> ids);
 
     @Query(value = "select item_id from item_sku where sku = ?", nativeQuery = true)
-    List<Integer> findBySku(String parseInt);
+    List<Long> findBySku(String parseInt);
 
     @Query(value = "select i.* from item as i", nativeQuery = true)
     Stream<ItemEntity> findAllInStream();

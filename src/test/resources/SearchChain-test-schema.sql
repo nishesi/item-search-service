@@ -60,25 +60,37 @@ values (1, 101, 1001, 'name_1', 'description_1', '/item_url1', 'type_1', 'some_i
        (13, 113, 1013, 'Iphone 14', 'description_1', '/item_url2', 'smartphone', 'some_image', 'Apple', 'USA'),
        (15, 113, 1013, 'Mac Air', 'description_1', '/item_url2', 'notebook', 'some_image', 'Apple', 'USA'),
        (16, 112, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image', 'Honor', 'Corey'),
-       (14, 101, 1013, 'something 13 Air', 'description_1', '/item_url2', 'type_1', 'some_image', 'brand_1', 'catalogue_1'),
+       (14, 101, 1013, 'something 13 Air', 'description_1', '/item_url2', 'type_1', 'some_image', 'brand_1',
+        'catalogue_1'),
        (17, 113, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image', 'Honor', 'USA'),
+-- id used in another test        (18, 113, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image', 'Honor', 'USA'),
 
-       (20, 120, 1020, 'Rav 4 2018 новый', 'new urban comfortable large', '/item_url18', 'Кроссовер', 'some_new_image', 'Toyota', 'Автомобили'),
-       (24, 120, 1020, 'Rav 4 2018 БУ', 'new urban comfortable small', '/item_url18', 'Кроссовер', 'some_new_image', 'Toyota', 'Автомобили'),
-       (29, 120, 1020, 'Rav 10 2018 БУ', 'standard desc', '/item_url18', 'Хэтчбек', 'some_new_image', 'Toyota', 'Автомобили'),
-       (21, 120, 1021, 'Cruze 2019 новый', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet', 'Автомобили'),
-       (22, 120, 1021, 'Cruze 2019 БУ', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet', 'Автомобили'),
-       (23, 120, 1021, 'Cruze 2019 Кроссовер', 'standard desc', '/item_url18', 'автомобиль', 'some_new_image', 'Chevrolet', 'Автомобили'),
-       (30, 121, 1021, 'Cruze 2019 новый', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet', 'Электромобили'),
-       (25, 121, 1021, 'Cruze 2020 БУ', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet', 'Электромобили'),
-       (26, 121, 1021, 'Rav 4 2120', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Toyota', 'Электромобили'),
-       (27, 120, 1021, 'Aveo 2010 БУ', 'standard desc', '/item_url18', 'Хэтчбек', 'some_new_image', 'Chevrolet', 'Автомобили'),
-       (28, 120, 1021, 'Corolla 2013 БУ', 'standard desc', '/item_url18', 'Хэтчбек', 'some_new_image', 'Toyota', 'Автомобили');
-
-
+       (20, 120, 1020, 'Rav 4 2018 новый', 'new urban comfortable large', '/item_url18', 'Кроссовер', 'some_new_image',
+        'Toyota', 'Автомобили'),
+       (24, 120, 1020, 'Rav 4 2018 БУ', 'new urban comfortable small', '/item_url18', 'Кроссовер', 'some_new_image',
+        'Toyota', 'Автомобили'),
+       (29, 120, 1020, 'Rav 10 2018 БУ', 'standard desc', '/item_url18', 'Хэтчбек', 'some_new_image', 'Toyota',
+        'Автомобили'),
+       (21, 120, 1021, 'Cruze 2019 новый', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet',
+        'Автомобили'),
+       (22, 120, 1021, 'Cruze 2019 БУ', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet',
+        'Автомобили'),
+       (23, 120, 1021, 'Cruze 2019 Кроссовер', 'standard desc', '/item_url18', 'автомобиль', 'some_new_image',
+        'Chevrolet', 'Автомобили'),
+       (30, 121, 1021, 'Cruze 2019 новый', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet',
+        'Электромобили'),
+       (25, 121, 1021, 'Cruze 2020 БУ', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet',
+        'Электромобили'),
+       (26, 121, 1021, 'Rav 4 2120', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Toyota',
+        'Электромобили'),
+       (27, 120, 1021, 'Aveo 2010 БУ', 'standard desc', '/item_url18', 'Хэтчбек', 'some_new_image', 'Chevrolet',
+        'Автомобили'),
+       (28, 120, 1021, 'Corolla 2013 БУ', 'standard desc', '/item_url18', 'Хэтчбек', 'some_new_image', 'Toyota',
+        'Автомобили');
 
 insert into item_sku (item_id, sku)
 values (1, '100001');
+-- used in another test        (18, '100002')
 
 insert into remain (item_id, region_id, price)
 values (1, 1, 1),

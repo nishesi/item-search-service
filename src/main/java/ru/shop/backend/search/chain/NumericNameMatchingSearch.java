@@ -2,14 +2,14 @@ package ru.shop.backend.search.chain;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import ru.shop.backend.search.model.CatalogueElastic;
 import ru.shop.backend.search.model.ItemElastic;
 import ru.shop.backend.search.repository.ItemRepository;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isNumeric;
@@ -20,51 +20,28 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 public class NumericNameMatchingSearch implements SearchLink<List<CatalogueElastic>> {
     private final ItemRepository repo;
 
+    private static List<CatalogueElastic> groupByCatalogue(List<ItemElastic> list) {
+        return list.stream()
+                .collect(Collectors.groupingBy(ItemElastic::getCatalogueId))
+                .values().stream()
+                .map(itemElastics -> {
+                    var item = itemElastics.get(0);
+                    return new CatalogueElastic(
+                            item.getCatalogue(),
+                            item.getCatalogueId(),
+                            itemElastics,
+                            "");
+                })
+                .collect(Collectors.toList());
+    }
+
     @Override
     public Optional<List<CatalogueElastic>> find(String text, Pageable pageable) {
         if (isNumeric(text)) {
-            List<ItemElastic> list1 = repo.findAllByName(".*" + text + ".*", PageRequest.of(0, 150));
-            //TODO наверное здесь метод используется только для группировки по каталогам
-            var catalogue = getMatchingOrGroupByCatalogue(list1, text);
-            if (!catalogue.isEmpty()) {
-                return Optional.of(catalogue);
-            }
+            List<ItemElastic> list = repo.findAllByNameContaining(text, pageable);
+            if (!list.isEmpty())
+                return Optional.of(groupByCatalogue(list));
         }
         return Optional.empty();
-    }
-
-    public static List<CatalogueElastic> getMatchingOrGroupByCatalogue(List<ItemElastic> list, String text) {
-        Map<String, List<ItemElastic>> map = new HashMap<>();
-        ItemElastic searchedItem = null;
-
-        for (ItemElastic i : list) {
-            if (text.equals(i.getName())) {
-                searchedItem = i;
-            }
-            //TODO бессмысленно, зачем name.startsWith(type)
-            if (text.endsWith(i.getName()) && text.startsWith(i.getType())) {
-                searchedItem = i;
-            }
-            if (!map.containsKey(i.getCatalogue())) {
-                map.put(i.getCatalogue(), new ArrayList<>());
-            }
-            map.get(i.getCatalogue()).add(i);
-        }
-
-        if (searchedItem != null) {
-            return List.of(new CatalogueElastic(
-                    searchedItem.getCatalogue(),
-                    searchedItem.getCatalogueId(),
-                    List.of(searchedItem),
-                    null));
-        }
-
-        return map.keySet().stream()
-                .map(c -> new CatalogueElastic(
-                        c,
-                        map.get(c).get(0).getCatalogueId(),
-                        map.get(c),
-                        null))
-                .collect(Collectors.toList());
     }
 }

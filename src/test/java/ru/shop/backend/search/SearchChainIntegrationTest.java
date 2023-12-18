@@ -28,6 +28,7 @@ import ru.shop.backend.search.util.SimpleElasticsearchContainer;
 import ru.shop.backend.search.util.SimplePostgresContainer;
 
 import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -124,83 +125,6 @@ public class SearchChainIntegrationTest {
                     .isEmpty();
         }
 
-        @Test
-        void should_return_catalogue_and_item_by_sku() {
-            String text = "100001";
-            var result = searchChain.searchByText(text, pageable);
-            assertThat(result)
-                    .hasSize(1)
-                    .allSatisfy(catalogue -> {
-                        assertThat(catalogue)
-                                .hasFieldOrPropertyWithValue("catalogueId", 101L);
-                        assertThat(catalogue.getItems())
-                                .hasSize(1)
-                                .allMatch(item -> item.getItemId() == 1L);
-                    });
-        }
-
-        @Test
-        void should_return_cat_and_item_by_item_name() {
-            String text = "200002";
-            var result = searchChain.searchByText(text, pageable);
-            assertThat(result)
-                    .hasSize(1)
-                    .allSatisfy(catalogue -> {
-                        assertThat(catalogue)
-                                .hasFieldOrPropertyWithValue("catalogueId", 101L);
-                        assertThat(catalogue.getItems())
-                                .hasSize(1)
-                                .allMatch(item -> item.getItemId() == 2L);
-                    });
-        }
-
-        //TODO изменить логику поиска по числовой строке.
-//        @Test
-//        void should_return_cat_and_item_by_text_as_regexp() {
-//            // "'type'.*'name'"
-//            String text = "30000199200003";
-//            var result = searchChain.searchByText(text, pageable);
-//            assertThat(result)
-//                    .hasSize(1)
-//                    .allSatisfy(catalogue -> {
-//                        assertThat(catalogue)
-//                                .hasFieldOrPropertyWithValue("catalogueId", 101L);
-//                        assertThat(catalogue.getItems())
-//                                .hasSize(1)
-//                                .allMatch(item -> item.getItemId() == 3L);
-//                    });
-//        }
-
-        @Test
-        void should_return_by_name_containing_number() {
-            String text = "200003";
-            var result = searchChain.searchByText(text, pageable);
-
-            assertThat(result)
-                    .hasSize(2)
-                    .anySatisfy(catalogue -> {
-                        assertThat(catalogue)
-                                .hasFieldOrPropertyWithValue("catalogueId", 101L);
-                        assertThat(catalogue.getItems())
-                                .hasSize(1)
-                                .allMatch(item -> item.getItemId() == 3L &&
-                                        item.getCatalogueId() == 101L);
-                    })
-                    .anySatisfy(catalogue -> {
-                        assertThat(catalogue)
-                                .hasFieldOrPropertyWithValue("catalogueId", 102L);
-                        assertThat(catalogue.getItems())
-                                .hasSize(2)
-                                .anySatisfy(item -> assertThat(item)
-                                        .hasFieldOrPropertyWithValue("itemId", 4L)
-                                        .hasFieldOrPropertyWithValue("catalogueId", 102L)
-                                )
-                                .anySatisfy(item -> assertThat(item)
-                                        .hasFieldOrPropertyWithValue("itemId", 5L)
-                                        .hasFieldOrPropertyWithValue("catalogueId", 102L));
-                    });
-        }
-
         @ParameterizedTest
         @CsvSource({
                 "Laptop,6", "Gaming Laptop,7"
@@ -217,6 +141,54 @@ public class SearchChainIntegrationTest {
                                 .hasSize(1)
                                 .allMatch(item -> item.getItemId() == itemId && item.getCatalogueId() == 102L);
                     });
+        }
+
+        @Nested
+        class test_numeric_search {
+            @Test
+            void should_return_catalogue_and_item_by_sku() {
+                String text = "100001";
+                var result = searchChain.searchByText(text, pageable);
+                assertThat(result)
+                        .hasSize(1)
+                        .allSatisfy(catalogue -> {
+                            assertThat(catalogue)
+                                    .hasFieldOrPropertyWithValue("catalogueId", 101L);
+                            assertThat(catalogue.getItems())
+                                    .hasSize(1)
+                                    .allMatch(item -> item.getItemId() == 1L);
+                        });
+            }
+
+            @Test
+            void should_return_by_name_containing_number() {
+                String text = "200003";
+                var result = searchChain.searchByText(text, pageable);
+
+                assertThat(result)
+                        .hasSize(2)
+                        .anySatisfy(catalogue -> {
+                            assertThat(catalogue)
+                                    .hasFieldOrPropertyWithValue("catalogueId", 101L);
+                            assertThat(catalogue.getItems())
+                                    .hasSize(1)
+                                    .allMatch(item -> item.getItemId() == 3L &&
+                                            item.getCatalogueId() == 101L);
+                        })
+                        .anySatisfy(catalogue -> {
+                            assertThat(catalogue)
+                                    .hasFieldOrPropertyWithValue("catalogueId", 102L);
+                            assertThat(catalogue.getItems())
+                                    .hasSize(2)
+                                    .anySatisfy(item -> assertThat(item)
+                                            .hasFieldOrPropertyWithValue("itemId", 4L)
+                                            .hasFieldOrPropertyWithValue("catalogueId", 102L)
+                                    )
+                                    .anySatisfy(item -> assertThat(item)
+                                            .hasFieldOrPropertyWithValue("itemId", 5L)
+                                            .hasFieldOrPropertyWithValue("catalogueId", 102L));
+                        });
+            }
         }
 
         @Nested
@@ -399,6 +371,36 @@ public class SearchChainIntegrationTest {
 
     @Nested
     class bug_fix_tests {
+
+        @Test
+        @Transactional
+        void should_return_if_elasticsearch_not_updated_by_sku() {
+            String sku = "100002";
+            int inserted = entityManager.createNativeQuery("insert into item values " +
+                            "(18, 113, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image', 'Honor', 'USA')")
+                    .executeUpdate();
+            assertThat(inserted)
+                    .isOne();
+
+            inserted = entityManager.createNativeQuery("insert into item_sku values (18, '" + sku + "')")
+                    .executeUpdate();
+            assertThat(inserted)
+                    .isOne();
+
+            var result = searchChain.searchByText(sku, pageable);
+
+            assertThat(result)
+                    .hasSize(1)
+                    .allSatisfy(cat -> {
+                        assertThat(cat)
+                                .hasFieldOrPropertyWithValue("catalogueId", 113L);
+                        assertThat(cat.getItems())
+                                .hasSize(1)
+                                .anySatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemid", 18L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 113L));
+                    });
+        }
 
         //TODO не работает
         @ParameterizedTest

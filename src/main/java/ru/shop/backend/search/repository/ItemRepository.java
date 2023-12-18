@@ -7,6 +7,7 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import ru.shop.backend.search.model.ItemElastic;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Integer> {
 
@@ -205,17 +206,13 @@ public interface ItemRepository extends ElasticsearchRepository<ItemElastic, Int
             "  }" +
             "}")
     List<ItemElastic> find(String text, Long catalogueId, String type, Pageable pageable);
-    @Query("{" +
-            "  \"term\": {" +
-            "    \"item_id\": \"?0\"" +
-            "  }" +
-            "}")
-    List<ItemElastic> findByItemId(String itemId, PageRequest of);
 
     @Query("{" +
             "  \"regexp\": {" +
-            "    \"name\": \"?0\"" +
+            "    \"name\": \".*?0.*\"" +
             "  }" +
             "}")
-    List<ItemElastic> findAllByName(String name, Pageable pageable);
+    List<ItemElastic> findAllByNameContaining(String name, Pageable pageable);
+
+    Optional<ItemElastic> findByItemId(Long itemId);
 }
