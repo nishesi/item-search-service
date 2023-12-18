@@ -17,7 +17,7 @@ public class SearchController implements SearchApi {
     }
 
     @Override
-    public SearchResultElastic finds(String text, int regionId) {
+    public SearchResultElastic finds(String text) {
         return service.getSearchResultElastic(text);
     }
 }

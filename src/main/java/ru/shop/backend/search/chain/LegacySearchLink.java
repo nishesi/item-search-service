@@ -36,7 +36,6 @@ public class LegacySearchLink implements SearchLink<List<CatalogueElastic>> {
     private List<CatalogueElastic> findByAnyOccurrence(String text, Pageable pageable) {
         List<String> words = new ArrayList<>();
         boolean needConvert = parseAndAssertNeedConvert(text, words);
-        words.remove("");
 
         String brand = tryFindBrand(words, needConvert, pageable);
 

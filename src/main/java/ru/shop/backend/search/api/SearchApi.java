@@ -1,5 +1,6 @@
 package ru.shop.backend.search.api;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,8 +17,10 @@ import ru.shop.backend.search.dto.SearchResultElastic;
 @RequestMapping("/api/search")
 @Tag(name = "Поиск", description = "Методы поиска")
 public interface SearchApi {
+
+    @Operation(description = "Найти каталоги и товары с ценами соответствующего региона")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Возвращает результаты поиска для всплывающего окна",
+            @ApiResponse(responseCode = "200", description = "Результаты поиска",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = SearchResult.class))}),
             @ApiResponse(responseCode = "400", description = "Ошибка обработки",
@@ -34,8 +37,9 @@ public interface SearchApi {
             int regionId
     );
 
+    @Operation(description = "Найти товары сгруппировав по каталогам")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Возвращает результаты поиска",
+            @ApiResponse(responseCode = "200", description = "Результаты поиска",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = SearchResultElastic.class))}),
             @ApiResponse(responseCode = "400", description = "Ошибка обработки",
@@ -47,7 +51,5 @@ public interface SearchApi {
     SearchResultElastic finds(
             @Parameter(description = "Поисковый запрос")
             @RequestParam
-            String text,
-            @CookieValue(defaultValue = "1")
-            int regionId);
+            String text);
 }

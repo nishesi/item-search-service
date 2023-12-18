@@ -54,7 +54,7 @@ public class StringUtils {
         } else if (isContainErrorChar(convert(text))) {
             needConvert = false;
         }
-        words.addAll(List.of(text.split("\\s")));
+        words.addAll(List.of(text.split(" ")));
         return needConvert;
     }
 }
