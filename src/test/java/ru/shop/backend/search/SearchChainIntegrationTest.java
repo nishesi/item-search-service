@@ -46,7 +46,7 @@ public class SearchChainIntegrationTest {
 
     @Container
     static final PostgreSQLContainer<?> postgres = new SimplePostgresContainer()
-            .withInitScript("SearchChain-test-schema.sql");
+            .withInitScript("test-schema.sql");
 
     @Autowired
     ItemDbRepository itemJpaRepository;
@@ -331,60 +331,6 @@ public class SearchChainIntegrationTest {
 
         @Nested
         class test_two_words {
-            @ParameterizedTest
-            @CsvSource({"Iphone 13", "Iphon 13"})
-            void should_return_exact_last_word_match(String text) {
-                var result = searchChain.searchByText(text, pageable);
-
-                assertThat(result)
-                        .hasSize(1)
-                        .allSatisfy(catalogue -> {
-                            assertThat(catalogue)
-                                    .hasFieldOrPropertyWithValue("catalogueId", 113L);
-                            assertThat(catalogue.getItems())
-                                    .hasSize(1)
-                                    .allSatisfy(item -> assertThat(item)
-                                            .hasFieldOrPropertyWithValue("itemId", 12L)
-                                            .hasFieldOrPropertyWithValue("catalogueId", 113L));
-                        });
-            }
-
-            @ParameterizedTest
-            @CsvSource({"13,smartphone","13,smartpone"})
-            void should_return_exact_match_by_type_and_last_word(String text, String type) {
-                var result = searchChain.searchByText(text + " " + type, pageable);
-//            var result = service.getAll(text + " " + type, pageable);
-
-                assertThat(result)
-                        .hasSize(1)
-                        .allSatisfy(catalogue -> {
-                            assertThat(catalogue)
-                                    .hasFieldOrPropertyWithValue("catalogueId", 113L);
-                            assertThat(catalogue.getItems())
-                                    .hasSize(1)
-                                    .allSatisfy(item -> assertThat(item)
-                                            .hasFieldOrPropertyWithValue("itemId", 12L)
-                                            .hasFieldOrPropertyWithValue("catalogueId", 113L));
-                        });
-            }
-
-            @ParameterizedTest
-            @CsvSource({"13,Apple", "13,Aple", "13,apple"})
-            void should_match_by_brand_and_name(String text, String brand) {
-                var result = searchChain.searchByText(text + " " + brand, pageable);
-
-                assertThat(result)
-                        .hasSize(1)
-                        .allSatisfy(catalogue -> {
-                            assertThat(catalogue)
-                                    .hasFieldOrPropertyWithValue("catalogueId", 113L);
-                            assertThat(catalogue.getItems())
-                                    .hasSize(1)
-                                    .allSatisfy(item -> assertThat(item)
-                                            .hasFieldOrPropertyWithValue("itemId", 12L)
-                                            .hasFieldOrPropertyWithValue("catalogueId", 113L));
-                        });
-            }
 
             @ParameterizedTest
             @CsvSource({"Apple smartphone", "apple smartphon", "aple smartphonee"})
@@ -407,85 +353,11 @@ public class SearchChainIntegrationTest {
                                             .hasFieldOrPropertyWithValue("catalogueId", 113L));
                         });
             }
-
-            @ParameterizedTest
-            @CsvSource({"USA notebook", "uSA notbook"})
-            void should_match_by_catalogue_and_type(String text) {
-                var result = searchChain.searchByText(text, pageable);
-
-                assertThat(result)
-                        .hasSize(1)
-                        .allSatisfy(catalogue -> {
-                            assertThat(catalogue)
-                                    .hasFieldOrPropertyWithValue("catalogueId", 113L);
-
-                            assertThat(catalogue.getItems())
-                                    .hasSize(2)
-                                    .anySatisfy(item -> assertThat(item)
-                                            .hasFieldOrPropertyWithValue("itemId", 15L)
-                                            .hasFieldOrPropertyWithValue("catalogueId", 113L))
-                                    .anySatisfy(item -> assertThat(item)
-                                            .hasFieldOrPropertyWithValue("itemId", 17L)
-                                            .hasFieldOrPropertyWithValue("catalogueId", 113L));
-                        });
-            }
         }
 
 
         @Nested
         class test_three_words {
-
-            @ParameterizedTest
-            @CsvSource({"Rav 4 2018", "rav 4 2018", "ravv 4 2018",
-                    "new urban comfortable", "new urbn comfrtable"})
-            void should_return_only_by_name_or_desc(String text) {
-                var result = searchChain.searchByText(text, pageable);
-
-                assertThat(result)
-                        .hasSize(1)
-                        .allSatisfy(catalogue -> {
-                            assertThat(catalogue)
-                                    .hasFieldOrPropertyWithValue("catalogueId", 120L);
-                            assertThat(catalogue.getItems())
-                                    .hasSize(2)
-                                    .anySatisfy(item -> assertThat(item)
-                                            .hasFieldOrPropertyWithValue("itemId", 20L)
-                                            .hasFieldOrPropertyWithValue("catalogueId", 120L))
-                                    .anySatisfy(item -> assertThat(item)
-                                            .hasFieldOrPropertyWithValue("itemId", 24L)
-                                            .hasFieldOrPropertyWithValue("catalogueId", 120L));
-                        });
-            }
-
-            @ParameterizedTest
-            @CsvSource({"Cruze 2019 Кроссовер", "Cruyze 2019 Кроссоввер"})
-            void should_return_by_name_and_type(String text) {
-                var result = searchChain.searchByText(text, pageable);
-
-                assertThat(result)
-                        .hasSize(2)
-                        .anySatisfy(cat -> {
-                            assertThat(cat)
-                                    .hasFieldOrPropertyWithValue("catalogueId", 120L);
-                            assertThat(cat.getItems())
-                                    .hasSize(2)
-                                    .anySatisfy(item -> assertThat(item)
-                                            .hasFieldOrPropertyWithValue("itemId", 21L)
-                                            .hasFieldOrPropertyWithValue("catalogueId", 120L))
-                                    .anySatisfy(item -> assertThat(item)
-                                            .hasFieldOrPropertyWithValue("itemId", 22L)
-                                            .hasFieldOrPropertyWithValue("catalogueId", 120L));
-                        })
-                        .anySatisfy(cat -> {
-                            assertThat(cat)
-                                    .hasFieldOrPropertyWithValue("catalogueId", 121L);
-                            assertThat(cat.getItems())
-                                    .hasSize(1)
-                                    .anySatisfy(item -> assertThat(item)
-                                            .hasFieldOrPropertyWithValue("itemId", 30L)
-                                            .hasFieldOrPropertyWithValue("catalogueId", 121L));
-                        });
-            }
 
             @ParameterizedTest
             @CsvSource({"Toyota rav 4", "Toyoto ravv 4"})
@@ -602,6 +474,140 @@ public class SearchChainIntegrationTest {
                                 .anySatisfy(item -> assertThat(item)
                                         .hasFieldOrPropertyWithValue("itemId", 27L)
                                         .hasFieldOrPropertyWithValue("catalogueId", 120L));
+                    });
+        }
+
+        //todo из-за type += "?"
+        @ParameterizedTest
+        @CsvSource({"Rav 4 2018", "rav 4 2018", "ravv 4 2018",
+                "new urban comfortable", "new urbn comfrtable"})
+        void should_return_only_by_name_or_desc(String text) {
+            var result = searchChain.searchByText(text, pageable);
+
+            assertThat(result)
+                    .hasSize(1)
+                    .allSatisfy(catalogue -> {
+                        assertThat(catalogue)
+                                .hasFieldOrPropertyWithValue("catalogueId", 120L);
+                        assertThat(catalogue.getItems())
+                                .hasSize(2)
+                                .anySatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemId", 20L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 120L))
+                                .anySatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemId", 24L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 120L));
+                    });
+        }
+
+        //todo text содержит найденный type
+        @ParameterizedTest
+        @CsvSource({"Cruze 2019 Кроссовер", "Cruyze 2019 Кроссоввер"})
+        void should_return_by_name_and_type(String text) {
+            var result = searchChain.searchByText(text, pageable);
+
+            assertThat(result)
+                    .hasSize(2)
+                    .anySatisfy(cat -> {
+                        assertThat(cat)
+                                .hasFieldOrPropertyWithValue("catalogueId", 120L);
+                        assertThat(cat.getItems())
+                                .hasSize(2)
+                                .anySatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemId", 21L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 120L))
+                                .anySatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemId", 22L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 120L));
+                    })
+                    .anySatisfy(cat -> {
+                        assertThat(cat)
+                                .hasFieldOrPropertyWithValue("catalogueId", 121L);
+                        assertThat(cat.getItems())
+                                .hasSize(1)
+                                .anySatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemId", 30L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 121L));
+                    });
+        }
+
+        //todo точное совпадение последнего слова не работает с помощью "?"
+        @ParameterizedTest
+        @CsvSource({"13,Apple", "13,Aple", "13,apple"})
+        void should_match_by_brand_and_name(String text, String brand) {
+            var result = searchChain.searchByText(text + " " + brand, pageable);
+
+            assertThat(result)
+                    .hasSize(1)
+                    .allSatisfy(catalogue -> {
+                        assertThat(catalogue)
+                                .hasFieldOrPropertyWithValue("catalogueId", 113L);
+                        assertThat(catalogue.getItems())
+                                .hasSize(1)
+                                .allSatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemId", 12L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 113L));
+                    });
+        }
+
+        //todo не работает из-за того, что в text остается найденный type
+        @ParameterizedTest
+        @CsvSource({"13,smartphone","13,smartpone"})
+        void should_return_exact_match_by_type_and_last_word(String text, String type) {
+            var result = searchChain.searchByText(text + " " + type, pageable);
+
+            assertThat(result)
+                    .hasSize(1)
+                    .allSatisfy(catalogue -> {
+                        assertThat(catalogue)
+                                .hasFieldOrPropertyWithValue("catalogueId", 113L);
+                        assertThat(catalogue.getItems())
+                                .hasSize(1)
+                                .allSatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemId", 12L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 113L));
+                    });
+        }
+
+        //todo попадает не туда из-за type += "?"
+        @ParameterizedTest
+        @CsvSource({"Iphone 13", "Iphon 13"})
+        void should_return_exact_last_word_match(String text) {
+            var result = searchChain.searchByText(text, pageable);
+
+            assertThat(result)
+                    .hasSize(1)
+                    .allSatisfy(catalogue -> {
+                        assertThat(catalogue)
+                                .hasFieldOrPropertyWithValue("catalogueId", 113L);
+                        assertThat(catalogue.getItems())
+                                .hasSize(1)
+                                .allSatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemId", 12L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 113L));
+                    });
+        }
+
+        //todo не работает мейби из-за catalogueId вместо catalogue_id
+        @ParameterizedTest
+        @CsvSource({"USA notebook", "uSA notbook"})
+        void should_match_by_catalogue_and_type(String text) {
+            var result = searchChain.searchByText(text, pageable);
+
+            assertThat(result)
+                    .hasSize(1)
+                    .allSatisfy(catalogue -> {
+                        assertThat(catalogue)
+                                .hasFieldOrPropertyWithValue("catalogueId", 113L);
+
+                        assertThat(catalogue.getItems())
+                                .hasSize(2)
+                                .anySatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemId", 15L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 113L))
+                                .anySatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemId", 17L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 113L));
                     });
         }
     }
