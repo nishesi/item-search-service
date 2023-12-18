@@ -18,8 +18,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import ru.shop.backend.search.chain.SearchChain;
 import ru.shop.backend.search.dto.CatalogueElastic;
 import ru.shop.backend.search.model.ItemElastic;
-import ru.shop.backend.search.repository.ItemJpaRepository;
 import ru.shop.backend.search.repository.ItemElasticRepository;
+import ru.shop.backend.search.repository.ItemJpaRepository;
 import ru.shop.backend.search.service.SearchService;
 import ru.shop.backend.search.util.SimplePostgresContainer;
 
@@ -38,7 +38,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 public class SearchServiceIntegrationTest {
     @Container
     static final PostgreSQLContainer<?> postgres = new SimplePostgresContainer()
-            .withInitScript("SearchService-test-schema.sql");
+            .withInitScript("test-schema.sql");
 
     @MockBean
     ItemElasticRepository itemElasticRepository;
@@ -78,93 +78,6 @@ public class SearchServiceIntegrationTest {
 
     @Nested
     class test_method_getSearchResult {
-
-        @Nested
-        class test_items {
-            @Test
-            void should_return_all_from_searchChain() {
-                var catalogues = List.of(
-                        new CatalogueElastic(null, 101L, List.of(
-                                new ItemElastic(null, null, 1L, 101L, null, null, null, null),
-                                new ItemElastic(null, null, 2L, 101L, null, null, null, null)
-                        ), null),
-                        new CatalogueElastic(null, 102L, List.of(
-                                new ItemElastic(null, null, 3L, 102L, null, null, null, null)
-                        ), null)
-                );
-                when(searchChain.searchByText(any(), any())).thenReturn(catalogues);
-                var items = searchService.getSearchResult(1, "any").getItems();
-
-                assertThat(items)
-                        .hasSize(3)
-                        .anySatisfy(item -> assertThat(item)
-                                .hasFieldOrPropertyWithValue("itemId", 1L))
-                        .anySatisfy(item -> assertThat(item)
-                                .hasFieldOrPropertyWithValue("itemId", 2L))
-                        .anySatisfy(item -> assertThat(item)
-                                .hasFieldOrPropertyWithValue("itemId", 3L));
-            }
-
-            @Test
-            void should_return_only_containing_in_remain_and_in_item() {
-                var catalogues = List.of(
-                        new CatalogueElastic(null, 103L, List.of(
-                                new ItemElastic(null, null, 4L, 103L, null, null, null, null),
-                                new ItemElastic(null, null, 5L, 103L, null, null, null, null),
-                                new ItemElastic(null, null, 6L, 103L, null, null, null, null)
-                        ), null)
-                );
-                when(searchChain.searchByText(any(), any())).thenReturn(catalogues);
-                var items = searchService.getSearchResult(2, "any").getItems();
-
-                assertThat(items)
-                        .hasSize(1)
-                        .anySatisfy(item -> assertThat(item)
-                                .hasFieldOrPropertyWithValue("itemId", 5L));
-            }
-
-            @Test
-            void should_return_with_correct_region() {
-                var catalogues = List.of(
-                        new CatalogueElastic(null, 103L, List.of(
-                                new ItemElastic(null, null, 7L, 103L, null, null, null, null),
-                                new ItemElastic(null, null, 8L, 103L, null, null, null, null)
-                        ), null)
-                );
-                when(searchChain.searchByText(any(), any())).thenReturn(catalogues);
-                var items = searchService.getSearchResult(3, "any").getItems();
-
-                assertThat(items)
-                        .hasSize(2)
-                        .anySatisfy(item -> assertThat(item)
-                                .hasFieldOrPropertyWithValue("itemId", 7L)
-                                .hasFieldOrPropertyWithValue("price", 101001001000L))
-                        .anySatisfy(item -> assertThat(item)
-                                .hasFieldOrPropertyWithValue("itemId", 8L)
-                                .hasFieldOrPropertyWithValue("price", 30L));
-            }
-
-            @Test
-            void should_return_with_correct_data() {
-                var catalogues = List.of(
-                        new CatalogueElastic(null, 104L, List.of(
-                                new ItemElastic(null, null, 9L, 104L, null, null, null, null)
-                        ), null)
-                );
-                when(searchChain.searchByText(any(), any())).thenReturn(catalogues);
-                var items = searchService.getSearchResult(1, "any").getItems();
-
-                assertThat(items)
-                        .hasSize(1)
-                        .anySatisfy(item -> assertThat(item)
-                                .hasFieldOrPropertyWithValue("itemId", 9L)
-                                .hasFieldOrPropertyWithValue("name", "Kit Kat")
-                                .hasFieldOrPropertyWithValue("url", "kit-kat-1")
-                                .hasFieldOrPropertyWithValue("image", "kit-kat-image.jpg")
-                                .hasFieldOrPropertyWithValue("cat", "Chocolate Bar")
-                                .hasFieldOrPropertyWithValue("price", 10L));
-            }
-        }
 
         @Nested
         class test_catalogues {
@@ -275,6 +188,96 @@ public class SearchServiceIntegrationTest {
                                 .hasFieldOrPropertyWithValue("url", "/cat/smartphones")
                                 .hasFieldOrPropertyWithValue("parentUrl", "/cat/techniques")
                         );
+            }
+        }
+    }
+
+    @Nested
+    class bug_fix {
+        @Nested
+        class test_items {
+            @Test
+            void should_return_all_from_searchChain() {
+                var catalogues = List.of(
+                        new CatalogueElastic(null, 101L, List.of(
+                                new ItemElastic(null, null, 1L, 101L, null, null, null, null),
+                                new ItemElastic(null, null, 2L, 101L, null, null, null, null)
+                        ), null),
+                        new CatalogueElastic(null, 102L, List.of(
+                                new ItemElastic(null, null, 3L, 102L, null, null, null, null)
+                        ), null)
+                );
+                when(searchChain.searchByText(any(), any())).thenReturn(catalogues);
+                var items = searchService.getSearchResult(1, "any").getItems();
+
+                assertThat(items)
+                        .hasSize(3)
+                        .anySatisfy(item -> assertThat(item)
+                                .hasFieldOrPropertyWithValue("itemId", 1L))
+                        .anySatisfy(item -> assertThat(item)
+                                .hasFieldOrPropertyWithValue("itemId", 2L))
+                        .anySatisfy(item -> assertThat(item)
+                                .hasFieldOrPropertyWithValue("itemId", 3L));
+            }
+
+            @Test
+            void should_return_only_containing_in_remain_and_in_item() {
+                var catalogues = List.of(
+                        new CatalogueElastic(null, 103L, List.of(
+                                new ItemElastic(null, null, 4L, 103L, null, null, null, null),
+                                new ItemElastic(null, null, 5L, 103L, null, null, null, null),
+                                new ItemElastic(null, null, 6L, 103L, null, null, null, null)
+                        ), null)
+                );
+                when(searchChain.searchByText(any(), any())).thenReturn(catalogues);
+                var items = searchService.getSearchResult(2, "any").getItems();
+
+                assertThat(items)
+                        .hasSize(1)
+                        .anySatisfy(item -> assertThat(item)
+                                .hasFieldOrPropertyWithValue("itemId", 5L));
+            }
+
+            @Test
+            void should_return_with_correct_region() {
+                var catalogues = List.of(
+                        new CatalogueElastic(null, 103L, List.of(
+                                new ItemElastic(null, null, 7L, 103L, null, null, null, null),
+                                new ItemElastic(null, null, 8L, 103L, null, null, null, null)
+                        ), null)
+                );
+                when(searchChain.searchByText(any(), any())).thenReturn(catalogues);
+                var items = searchService.getSearchResult(3, "any").getItems();
+
+                assertThat(items)
+                        .hasSize(2)
+                        .anySatisfy(item -> assertThat(item)
+                                .hasFieldOrPropertyWithValue("itemId", 7L)
+                                .hasFieldOrPropertyWithValue("price", 101001001000L))
+                        .anySatisfy(item -> assertThat(item)
+                                .hasFieldOrPropertyWithValue("itemId", 8L)
+                                .hasFieldOrPropertyWithValue("price", 30L));
+            }
+
+            @Test
+            void should_return_with_correct_data() {
+                var catalogues = List.of(
+                        new CatalogueElastic(null, 104L, List.of(
+                                new ItemElastic(null, null, 9L, 104L, null, null, null, null)
+                        ), null)
+                );
+                when(searchChain.searchByText(any(), any())).thenReturn(catalogues);
+                var items = searchService.getSearchResult(1, "any").getItems();
+
+                assertThat(items)
+                        .hasSize(1)
+                        .anySatisfy(item -> assertThat(item)
+                                .hasFieldOrPropertyWithValue("itemId", 9L)
+                                .hasFieldOrPropertyWithValue("name", "Kit Kat")
+                                .hasFieldOrPropertyWithValue("url", "kit-kat-1")
+                                .hasFieldOrPropertyWithValue("image", "kit-kat-image.jpg")
+                                .hasFieldOrPropertyWithValue("cat", "Chocolate Bar")
+                                .hasFieldOrPropertyWithValue("price", 10L));
             }
         }
     }
