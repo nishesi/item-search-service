@@ -61,7 +61,19 @@ values (1, 101, 1001, 'name_1', 'description_1', '/item_url1', 'type_1', 'some_i
        (15, 113, 1013, 'Mac Air', 'description_1', '/item_url2', 'notebook', 'some_image', 'Apple', 'USA'),
        (16, 112, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image', 'Honor', 'Corey'),
        (14, 101, 1013, 'something 13 Air', 'description_1', '/item_url2', 'type_1', 'some_image', 'brand_1', 'catalogue_1'),
-       (17, 113, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image', 'Honor', 'USA');
+       (17, 113, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image', 'Honor', 'USA'),
+
+       (20, 120, 1020, 'Rav 4 2018 новый', 'new urban comfortable large', '/item_url18', 'Кроссовер', 'some_new_image', 'Toyota', 'Автомобили'),
+       (24, 120, 1020, 'Rav 4 2018 БУ', 'new urban comfortable small', '/item_url18', 'Кроссовер', 'some_new_image', 'Toyota', 'Автомобили'),
+       (29, 120, 1020, 'Rav 10 2018 БУ', 'standard desc', '/item_url18', 'Хэтчбек', 'some_new_image', 'Toyota', 'Автомобили'),
+       (21, 120, 1021, 'Cruze 2019 новый', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet', 'Автомобили'),
+       (22, 120, 1021, 'Cruze 2019 БУ', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet', 'Автомобили'),
+       (23, 120, 1021, 'Cruze 2019 Кроссовер', 'standard desc', '/item_url18', 'автомобиль', 'some_new_image', 'Chevrolet', 'Автомобили'),
+       (30, 121, 1021, 'Cruze 2019 новый', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet', 'Электромобили'),
+       (25, 121, 1021, 'Cruze 2020 БУ', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Chevrolet', 'Электромобили'),
+       (26, 121, 1021, 'Rav 4 2120', 'standard desc', '/item_url18', 'Кроссовер', 'some_new_image', 'Toyota', 'Электромобили'),
+       (27, 120, 1021, 'Aveo 2010 БУ', 'standard desc', '/item_url18', 'Хэтчбек', 'some_new_image', 'Chevrolet', 'Автомобили'),
+       (28, 120, 1021, 'Corolla 2013 БУ', 'standard desc', '/item_url18', 'Хэтчбек', 'some_new_image', 'Toyota', 'Автомобили');
 
 
 
@@ -92,4 +104,7 @@ values (101, 'catalogue_1', 'image', 101, 'catalogue_1'),
        (102, 'catalogue_1', 'image', 101, 'catalogue_2'),
        (111, 'catalogue_1', 'image', 101, 'China'),
        (112, 'catalogue_1', 'image', 101, 'Corey'),
-       (113, 'catalogue_1', 'image', 101, 'USA');
+       (113, 'catalogue_1', 'image', 101, 'USA'),
+
+       (120, 'catalogue_20', 'image', 120, 'Автомобили'),
+       (121, 'catalogue_20', 'image', 120, 'Электромобили')
