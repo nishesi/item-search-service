@@ -1,5 +1,7 @@
 package ru.shop.backend.search.util;
 
+import java.util.List;
+
 public class StringUtils {
     public static Boolean isContainErrorChar(String text){
         return text.contains("[") || text.contains("]")
@@ -33,5 +35,18 @@ public class StringUtils {
             }
         }
         return builder.toString();
+    }
+
+    public static boolean parseAndAssertNeedConvert(String text, List<String> words) {
+        if (isContainErrorChar(text)) {
+            words.addAll(List.of(convert(text).split("\\s")));
+            return false;
+        } else if (isContainErrorChar(convert(text))) {
+            words.addAll(List.of(text.split("\\s")));
+            return false;
+        } else {
+            words.addAll(List.of(text.split("\\s")));
+            return true;
+        }
     }
 }
