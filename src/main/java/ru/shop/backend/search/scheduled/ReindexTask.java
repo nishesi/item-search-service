@@ -1,4 +1,4 @@
-package ru.shop.backend.search.service;
+package ru.shop.backend.search.scheduled;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ReindexSearchService {
+public class ReindexTask {
     private final ItemJpaRepository itemJpaRepository;
     private final ItemElasticRepository itemElasticRepository;
     private final ItemConverter itemConverter;
