@@ -6,6 +6,7 @@ import ru.shop.backend.search.model.ItemEntity;
 import ru.shop.backend.search.model.ItemWithPrice;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public interface ItemJpaRepository extends JpaRepository<ItemEntity, Long> {
@@ -22,8 +23,10 @@ public interface ItemJpaRepository extends JpaRepository<ItemEntity, Long> {
             "where i.item_id in  :ids", nativeQuery = true)
     List<ItemWithPrice> findAllByRegionIdAndIdIn(Integer regionId, List<Long> ids);
 
-    @Query(value = "select item_id from item_sku where sku = ?", nativeQuery = true)
-    List<Long> findBySku(String parseInt);
+    @Query(value = "select i.* from item i " +
+            "where item_id = (select item_id from item_sku " +
+            "                   where sku = :sku limit 1)", nativeQuery = true)
+    Optional<ItemEntity> findBySku(String sku);
 
     Stream<ItemEntity> streamAllBy();
 }

@@ -5,9 +5,9 @@ import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import ru.shop.backend.search.chain.SearchLink;
+import ru.shop.backend.search.converter.ItemConverter;
 import ru.shop.backend.search.dto.CatalogueElastic;
 import ru.shop.backend.search.repository.ItemJpaRepository;
-import ru.shop.backend.search.repository.ItemElasticRepository;
 
 import java.util.List;
 
@@ -18,16 +18,15 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 @RequiredArgsConstructor
 public class SkuMatchingSearch implements SearchLink<CatalogueElastic> {
     private final ItemJpaRepository itemJpaRepository;
-    private final ItemElasticRepository itemElasticRepository;
+    private final ItemConverter itemConverter;
 
     @Override
     public List<CatalogueElastic> findAll(String text, Pageable pageable) {
         if (!isNumeric(text))
             return List.of();
 
-        //TODO elasticsearch мог не успеть обновиться
-        return itemJpaRepository.findBySku(text).stream().findFirst()
-                .flatMap(itemElasticRepository::findByItemId)
+        return itemJpaRepository.findBySku(text)
+                .map(itemConverter::toItemElastic)
                 .map(item -> List.of(new CatalogueElastic(
                         item.getCatalogue(),
                         item.getCatalogueId(),
