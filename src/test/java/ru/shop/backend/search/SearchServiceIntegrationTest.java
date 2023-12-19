@@ -69,7 +69,11 @@ public class SearchServiceIntegrationTest {
                     "spring.datasource.url=" + postgres.getJdbcUrl(),
                     "spring.datasource.username=" + postgres.getUsername(),
                     "spring.datasource.password=" + postgres.getPassword(),
-                    "spring.datasource.driver-class-name=org.postgresql.Driver"
+                    "spring.elasticsearch.rest.uris=localhost:9200",
+                    "spring.datasource.driver-class-name=org.postgresql.Driver",
+                    "spring.elasticsearch.username=",
+                    "spring.elasticsearch.password="
+//                    "server.port=8080"
             ).applyTo(configurableApplicationContext.getEnvironment());
         }
     }

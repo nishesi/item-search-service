@@ -108,7 +108,10 @@ public class SearchChainIntegrationTest {
                     "spring.datasource.username=" + postgres.getUsername(),
                     "spring.datasource.password=" + postgres.getPassword(),
                     "spring.elasticsearch.rest.uris=" + elastic.getHttpHostAddress(),
-                    "spring.datasource.driver-class-name=org.postgresql.Driver"
+                    "spring.datasource.driver-class-name=org.postgresql.Driver",
+                    "spring.elasticsearch.username=",
+                    "spring.elasticsearch.password="
+//                    "server.port=8080"
             ).applyTo(configurableApplicationContext.getEnvironment());
         }
     }
