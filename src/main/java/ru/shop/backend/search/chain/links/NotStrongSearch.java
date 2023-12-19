@@ -20,7 +20,7 @@ public class NotStrongSearch implements SearchLink<CatalogueElastic> {
     public List<CatalogueElastic> findAll(String text, Pageable pageable) {
         text += "_";
         var list = findWithConvert(text, true,
-                t -> itemElasticRepository.findAllNotStrong(t, pageable));
+                t -> itemElasticRepository.findByFulltext(t, pageable));
         return groupByCatalogue(list, "");
     }
 }

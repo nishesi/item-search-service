@@ -11,9 +11,9 @@ import ru.shop.backend.search.repository.ItemElasticRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-import static ru.shop.backend.search.util.SearchUtils.*;
+import static ru.shop.backend.search.util.SearchUtils.findWithConvert;
+import static ru.shop.backend.search.util.SearchUtils.groupByCatalogue;
 import static ru.shop.backend.search.util.StringUtils.parseAndAssertNeedConvert;
 
 @Order(15)
@@ -33,18 +33,16 @@ public class CatalogueMatchingSearch extends TypeMatchingAbstractSearch implemen
 
         String type = tryFindType(words, needConvert, pageable);
 
-        List<ItemElastic> list = findByCriteria(words, type, catalogueId, pageable);
+        List<ItemElastic> list = findByCriteria(type, catalogueId, pageable);
 
-        Optional<List<CatalogueElastic>> result = findExactMatching(list, words, "");
-        return result.orElseGet(() -> groupByCatalogue(list, ""));
-
+        return groupByCatalogue(list, "");
     }
 
     private Long tryFindCatalogueId(List<String> words, boolean needConvert, Pageable pageable) {
         for (var iterator = words.iterator(); iterator.hasNext(); ) {
             String word = iterator.next();
             var list = findWithConvert(word, needConvert,
-                    t -> itemElasticRepository.findByCatalogue(t, pageable));
+                    t -> itemElasticRepository.findAllByCatalogueFuzzy(t, pageable));
             if (!list.isEmpty()) {
                 iterator.remove();
                 return list.get(0).getCatalogueId();
@@ -53,16 +51,10 @@ public class CatalogueMatchingSearch extends TypeMatchingAbstractSearch implemen
         return null;
     }
 
-    private List<ItemElastic> findByCriteria(List<String> words, String type, Long catalogueId, Pageable pageable) {
-        // '_' - prevent fuzzy search for last word
-        String text = String.join(" ", words) + "_" + " " + type;
-        String fType = type + "?";
+    private List<ItemElastic> findByCriteria(String type, Long catalogueId, Pageable pageable) {
         if (type.isEmpty()) {
-            return findWithConvert(text, true,
-                    t -> itemElasticRepository.find(t, catalogueId, fType, pageable));
-        } else {
-            return findWithConvert(text, true,
-                    t -> itemElasticRepository.find(t, catalogueId, pageable));
+            return itemElasticRepository.findByCatalogueId(catalogueId, pageable);
         }
+        return itemElasticRepository.findByCatalogueIdAndType(catalogueId, type, pageable);
     }
 }

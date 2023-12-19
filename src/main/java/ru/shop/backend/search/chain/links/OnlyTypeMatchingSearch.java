@@ -33,8 +33,8 @@ public class OnlyTypeMatchingSearch extends TypeMatchingAbstractSearch implement
 
         // '_' - prevent fuzzy search for last word
         text = String.join(" ", words) + "_";
-        List<ItemElastic> list = findWithConvert(text, needConvert,
-                t -> itemElasticRepository.findAllByType(t, type, pageable));
+        List<ItemElastic> list = findWithConvert(text, needConvert, t -> itemElasticRepository
+                .findByTextAndOptionalFilterByBrandAndType(t, 1, "", type, pageable));
 
         var result = findExactMatching(list, words, "");
         return result.orElseGet(() -> groupByCatalogue(list, ""));

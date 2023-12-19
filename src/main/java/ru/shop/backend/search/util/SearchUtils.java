@@ -18,12 +18,12 @@ public class SearchUtils {
         return list.stream()
                 .collect(Collectors.groupingBy(ItemElastic::getCatalogueId))
                 .values().stream()
-                .map(itemElastics -> {
-                    var item = itemElastics.get(0);
+                .map(items -> {
+                    var item = items.get(0);
                     return new CatalogueElastic(
                             item.getCatalogue(),
                             item.getCatalogueId(),
-                            itemElastics,
+                            items,
                             brand);
                 })
                 .collect(Collectors.toList());

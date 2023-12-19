@@ -21,14 +21,13 @@ public abstract class TypeMatchingAbstractSearch {
         List<ItemElastic> local;
         for (Iterator<String> iterator = words.iterator(); iterator.hasNext(); ) {
             String word = iterator.next();
-            local = findWithConvert(word, needConvert, t -> itemElasticRepository.findAllByType(t, pageable));
+            local = findWithConvert(word, needConvert, t -> itemElasticRepository.findAllByTypeFuzzy(t, pageable));
             if (!local.isEmpty()) {
                 type = local.stream()
                         .map(ItemElastic::getType)
                         .min(Comparator.comparingInt(String::length))
                         .get();
-                if (words.size() > 1)
-                    iterator.remove();
+                iterator.remove();
             }
         }
         return type;

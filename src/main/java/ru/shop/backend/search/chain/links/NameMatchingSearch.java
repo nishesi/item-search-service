@@ -29,7 +29,7 @@ public class NameMatchingSearch implements SearchLink<CatalogueElastic> {
         // '_' - prevent fuzzy search for last word
         text =  String.join(" ", words) + "_";
         List<ItemElastic> list = findWithConvert(text, needConvert,
-                t -> itemElasticRepository.find(t, pageable));
+                t -> itemElasticRepository.findByNameOrDescription(t, pageable));
         var result = findExactMatching(list, words, "");
         return result.orElseGet(() -> groupByCatalogue(list, ""));
     }

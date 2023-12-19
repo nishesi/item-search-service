@@ -22,10 +22,9 @@ public class NumericNameMatchingSearch implements SearchLink<CatalogueElastic> {
 
     @Override
     public List<CatalogueElastic> findAll(String text, Pageable pageable) {
-        if (isNumeric(text)) {
-            List<ItemElastic> list = itemElasticRepository.findAllByNameContaining(text, pageable);
-            return groupByCatalogue(list, "");
-        }
-        return List.of();
+        if (!isNumeric(text))
+            return List.of();
+        List<ItemElastic> list = itemElasticRepository.findAllByNameContaining(text, pageable);
+        return groupByCatalogue(list, "");
     }
 }
