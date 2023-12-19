@@ -12,8 +12,7 @@ import ru.shop.backend.search.repository.ItemElasticRepository;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ru.shop.backend.search.util.SearchUtils.findWithConvert;
-import static ru.shop.backend.search.util.SearchUtils.groupByCatalogue;
+import static ru.shop.backend.search.util.SearchUtils.*;
 import static ru.shop.backend.search.util.StringUtils.parseAndAssertNeedConvert;
 
 @Order(15)
@@ -35,7 +34,8 @@ public class CatalogueMatchingSearch extends TypeMatchingAbstractSearch implemen
 
         List<ItemElastic> list = findByCriteria(type, catalogueId, pageable);
 
-        return groupByCatalogue(list, "");
+        var result = findExactMatching(list, List.of(text.split(" ")), "");
+        return result.orElseGet(() -> groupByCatalogue(list, ""));
     }
 
     private Long tryFindCatalogueId(List<String> words, boolean needConvert, Pageable pageable) {

@@ -1,9 +1,6 @@
 package ru.shop.backend.search;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +15,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import ru.shop.backend.search.model.ItemElastic;
 import ru.shop.backend.search.repository.ItemElasticRepository;
+import ru.shop.backend.search.scheduled.ReindexTask;
 import ru.shop.backend.search.util.SimpleElasticsearchContainer;
 import ru.shop.backend.search.util.SimplePostgresContainer;
 
@@ -32,6 +30,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = RANDOM_PORT, classes = SearchApplication.class)
 @ContextConfiguration(initializers = {ItemElasticsearchRepositoryIntegrationTest.TestContextInitializer.class})
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ItemElasticsearchRepositoryIntegrationTest {
 
     @Container
@@ -46,6 +45,9 @@ public class ItemElasticsearchRepositoryIntegrationTest {
 
     @Autowired
     ItemElasticRepository itemElasticRepository;
+
+    @Autowired
+    ReindexTask reindexTask;
 
 
     @BeforeAll
@@ -62,9 +64,8 @@ public class ItemElasticsearchRepositoryIntegrationTest {
 
     @Test
     @Order(0)
-    void waiting() throws InterruptedException {
-        // wait until scheduled reindex task finishes
-        Thread.sleep(1000);
+    void reindex() {
+        reindexTask.reindex();
     }
 
     static class TestContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
