@@ -10,13 +10,13 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class SearchChain {
-    private final List<SearchLink<List<CatalogueElastic>>> chain;
+    private final List<SearchLink<CatalogueElastic>> chain;
 
     public List<CatalogueElastic> searchByText(String text, Pageable pageable) {
         for (var link : chain) {
-            var result = link.find(text, pageable);
-            if (result.isPresent())
-                return result.get();
+            var result = link.findAll(text, pageable);
+            if (!result.isEmpty())
+                return result;
         }
         return List.of();
     }

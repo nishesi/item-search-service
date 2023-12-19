@@ -1,29 +1,29 @@
-package ru.shop.backend.search.chain;
+package ru.shop.backend.search.chain.links;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import ru.shop.backend.search.chain.SearchLink;
 import ru.shop.backend.search.dto.CatalogueElastic;
 import ru.shop.backend.search.repository.ItemJpaRepository;
 import ru.shop.backend.search.repository.ItemElasticRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 @Order(0)
 @Component
 @RequiredArgsConstructor
-public class SkuMatchingSearch implements SearchLink<List<CatalogueElastic>> {
+public class SkuMatchingSearch implements SearchLink<CatalogueElastic> {
     private final ItemJpaRepository itemJpaRepository;
     private final ItemElasticRepository itemElasticRepository;
 
     @Override
-    public Optional<List<CatalogueElastic>> find(String text, Pageable pageable) {
+    public List<CatalogueElastic> findAll(String text, Pageable pageable) {
         if (!isNumeric(text))
-            return Optional.empty();
+            return List.of();
 
         //TODO elasticsearch мог не успеть обновиться
         return itemJpaRepository.findBySku(text).stream().findFirst()
@@ -33,6 +33,7 @@ public class SkuMatchingSearch implements SearchLink<List<CatalogueElastic>> {
                         item.getCatalogueId(),
                         List.of(item),
                         item.getBrand()
-                )));
+                )))
+                .orElseGet(List::of);
     }
 }

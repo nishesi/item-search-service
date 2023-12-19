@@ -1,8 +1,10 @@
-package ru.shop.backend.search.chain;
+package ru.shop.backend.search.chain.links;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import ru.shop.backend.search.chain.SearchLink;
+import ru.shop.backend.search.chain.TypeMatchingAbstractSearch;
 import ru.shop.backend.search.dto.CatalogueElastic;
 import ru.shop.backend.search.model.ItemElastic;
 import ru.shop.backend.search.repository.ItemElasticRepository;
@@ -16,27 +18,20 @@ import static ru.shop.backend.search.util.StringUtils.parseAndAssertNeedConvert;
 
 @Order(15)
 @Component
-public class CatalogueMatchingSearch extends TypeMatchingAbstractSearch implements SearchLink<List<CatalogueElastic>> {
+public class CatalogueMatchingSearch extends TypeMatchingAbstractSearch implements SearchLink<CatalogueElastic> {
     public CatalogueMatchingSearch(ItemElasticRepository repository) {
         super(repository);
     }
 
     @Override
-    public Optional<List<CatalogueElastic>> find(String text, Pageable pageable) {
-        List<CatalogueElastic> list = findByCatalogue(text, pageable);
-        if (list.isEmpty())
-            return Optional.empty();
-        return Optional.of(list);
-    }
-
-    private List<CatalogueElastic> findByCatalogue(String text, Pageable pageable) {
+    public List<CatalogueElastic> findAll(String text, Pageable pageable) {
         List<String> words = new ArrayList<>();
         boolean needConvert = parseAndAssertNeedConvert(text, words);
         Long catalogueId = tryFindCatalogueId(words, needConvert, pageable);
         if (catalogueId == null)
             return List.of();
 
-        String type = tryFindType(words, needConvert, new ArrayList<>(), pageable);
+        String type = tryFindType(words, needConvert, pageable);
 
         List<ItemElastic> list = findByCriteria(words, type, catalogueId, pageable);
 
@@ -46,10 +41,12 @@ public class CatalogueMatchingSearch extends TypeMatchingAbstractSearch implemen
     }
 
     private Long tryFindCatalogueId(List<String> words, boolean needConvert, Pageable pageable) {
-        for (String word : new ArrayList<>(words)) {
-            var list = findWithConvert(word, needConvert, t -> itemElasticRepository.findByCatalogue(t, pageable));
+        for (var iterator = words.iterator(); iterator.hasNext(); ) {
+            String word = iterator.next();
+            var list = findWithConvert(word, needConvert,
+                    t -> itemElasticRepository.findByCatalogue(t, pageable));
             if (!list.isEmpty()) {
-                words.remove(word);
+                iterator.remove();
                 return list.get(0).getCatalogueId();
             }
         }

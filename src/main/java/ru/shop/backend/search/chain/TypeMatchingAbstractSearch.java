@@ -5,8 +5,8 @@ import org.springframework.data.domain.Pageable;
 import ru.shop.backend.search.model.ItemElastic;
 import ru.shop.backend.search.repository.ItemElasticRepository;
 
-import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 import static ru.shop.backend.search.util.SearchUtils.findWithConvert;
@@ -15,11 +15,12 @@ import static ru.shop.backend.search.util.SearchUtils.findWithConvert;
 public abstract class TypeMatchingAbstractSearch {
     protected final ItemElasticRepository itemElasticRepository;
 
-    protected String tryFindType(List<String> words, boolean needConvert, List<ItemElastic> list, Pageable pageable) {
+    protected String tryFindType(List<String> words, boolean needConvert, Pageable pageable) {
         String type = "";
 
-        List<ItemElastic> local = List.of();
-        for (String word : new ArrayList<>(words)) {
+        List<ItemElastic> local;
+        for (Iterator<String> iterator = words.iterator(); iterator.hasNext(); ) {
+            String word = iterator.next();
             local = findWithConvert(word, needConvert, t -> itemElasticRepository.findAllByType(t, pageable));
             if (!local.isEmpty()) {
                 type = local.stream()
@@ -27,11 +28,9 @@ public abstract class TypeMatchingAbstractSearch {
                         .min(Comparator.comparingInt(String::length))
                         .get();
                 if (words.size() > 1)
-                    words.remove(word);
+                    iterator.remove();
             }
         }
-
-        list.addAll(local);
         return type;
     }
 }

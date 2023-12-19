@@ -28,6 +28,7 @@ import ru.shop.backend.search.util.SimplePostgresContainer;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -45,7 +46,7 @@ public class SearchChainIntegrationTest {
 
     @Container
     static final PostgreSQLContainer<?> postgres = new SimplePostgresContainer()
-            .withInitScript("test-schema.sql");
+            .withInitScript("SearchChain-test-schema.sql");
 
     @Autowired
     ItemJpaRepository itemJpaRepository;
@@ -213,15 +214,6 @@ public class SearchChainIntegrationTest {
             }
 
             @ParameterizedTest
-            @CsvSource({"Xiaomi", "Xiyaomi", "Xiomi", "Xyaomi"})
-            void should_not_return_by_brand(String text) {
-                var result = searchChain.searchByText(text, pageable);
-
-                assertThat(result)
-                        .isEmpty();
-            }
-
-            @ParameterizedTest
             @CsvSource({"redmi,9", "desc_word,11"})
             public void should_return_by_name_or_description(String text, Long itemId) {
                 var result = searchChain.searchByText(text, pageable);
@@ -354,11 +346,6 @@ public class SearchChainIntegrationTest {
             }
 
         }
-    }
-
-    @Nested
-    class questionable_tests {
-
     }
 
     @Nested
@@ -603,6 +590,26 @@ public class SearchChainIntegrationTest {
                                         .hasFieldOrPropertyWithValue("itemId", 17L)
                                         .hasFieldOrPropertyWithValue("catalogueId", 113L));
                     });
+        }
+
+        @ParameterizedTest
+        @CsvSource({"Xiaomi", "Xiyaomi", "Xiomi", "Xyaomi"})
+        void should_return_by_brand(String text) {
+            List<ItemElastic> result = searchChain.searchByText(text, pageable).stream()
+                    .flatMap(c -> c.getItems().stream())
+                    .collect(Collectors.toList());
+
+            assertThat(result)
+                    .hasSize(3)
+                    .anySatisfy(item -> assertThat(item)
+                            .hasFieldOrPropertyWithValue("itemId", 8L)
+                            .hasFieldOrPropertyWithValue("catalogueId", 102L))
+                    .anySatisfy(item -> assertThat(item)
+                            .hasFieldOrPropertyWithValue("itemId", 9L)
+                            .hasFieldOrPropertyWithValue("catalogueId", 111L))
+                    .anySatisfy(item -> assertThat(item)
+                            .hasFieldOrPropertyWithValue("itemId", 11L)
+                            .hasFieldOrPropertyWithValue("catalogueId", 111L));
         }
     }
 }

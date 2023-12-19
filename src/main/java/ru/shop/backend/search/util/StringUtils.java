@@ -57,4 +57,8 @@ public class StringUtils {
         words.addAll(List.of(text.split(" ")));
         return needConvert;
     }
+
+    public static String createQuery(String word, boolean needConvert) {
+        return word + ((needConvert) ? " " + convert(word) : "");
+    }
 }
