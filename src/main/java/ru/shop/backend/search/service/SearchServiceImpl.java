@@ -66,11 +66,12 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private List<CatalogueWithParent> getCataloguesWithParents(List<ItemWithPrice> items) {
-        var foundItemIds = items.stream()
+        var catalogueIds = items.stream()
                 .map(ItemWithPrice::getCatalogueId)
+                .distinct()
                 .collect(Collectors.toList());
         Set<String> uniqueUrls = new HashSet<>();
-        return catalogueJpaRepository.findAllWithParentByIdIn(foundItemIds)
+        return catalogueJpaRepository.findAllWithParentByIdIn(catalogueIds)
                 .stream()
                 .filter(c -> uniqueUrls.add(c.getUrl()))
                 .collect(Collectors.toList());
