@@ -7,7 +7,7 @@ import org.testcontainers.utility.DockerImageName;
 
 public class SimplePostgresContainer extends PostgreSQLContainer<SimplePostgresContainer> {
     public SimplePostgresContainer() {
-        super(DockerImageName.parse("postgres:14.10"));
+        super(DockerImageName.parse("postgres:10"));
         withNetwork(Network.SHARED);
         addFixedExposedPort(5433, 5432);
         waitingFor(new WaitAllStrategy());
