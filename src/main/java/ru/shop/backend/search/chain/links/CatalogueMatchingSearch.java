@@ -26,11 +26,11 @@ public class CatalogueMatchingSearch extends TypeMatchingAbstractSearch implemen
     public List<CatalogueElastic> findAll(String text, Pageable pageable) {
         List<String> words = new ArrayList<>();
         boolean needConvert = parseAndAssertNeedConvert(text, words);
-        Long catalogueId = tryFindCatalogueId(words, needConvert, pageable);
+        Long catalogueId = tryFindCatalogueId(words, needConvert);
         if (catalogueId == null)
             return List.of();
 
-        String type = tryFindType(words, needConvert, pageable);
+        String type = tryFindType(words, needConvert);
 
         List<ItemElastic> list = findByCriteria(type, catalogueId, pageable);
 
@@ -38,11 +38,11 @@ public class CatalogueMatchingSearch extends TypeMatchingAbstractSearch implemen
         return result.orElseGet(() -> groupByCatalogue(list, ""));
     }
 
-    private Long tryFindCatalogueId(List<String> words, boolean needConvert, Pageable pageable) {
+    private Long tryFindCatalogueId(List<String> words, boolean needConvert) {
         for (var iterator = words.iterator(); iterator.hasNext(); ) {
             String word = iterator.next();
             var list = findWithConvert(word, needConvert,
-                    t -> itemElasticRepository.findAllByCatalogueFuzzy(t, pageable));
+                    t -> itemElasticRepository.findAllByCatalogueFuzzy(t, ONE_ELEMENT));
             if (!list.isEmpty()) {
                 iterator.remove();
                 return list.get(0).getCatalogueId();

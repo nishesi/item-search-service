@@ -27,7 +27,7 @@ public class OnlyTypeMatchingSearch extends TypeMatchingAbstractSearch implement
         List<String> words = new ArrayList<>();
         boolean needConvert = parseAndAssertNeedConvert(text, words);
 
-        String type = tryFindType(words, needConvert, pageable);
+        String type = tryFindType(words, needConvert);
         if (type.isEmpty())
             return List.of();
 

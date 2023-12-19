@@ -20,7 +20,6 @@ import static ru.shop.backend.search.util.StringUtils.*;
 @Order(10)
 @Component
 public class BrandMatchingSearch extends TypeMatchingAbstractSearch implements SearchLink<CatalogueElastic> {
-    private static final Pageable ONE = PageRequest.of(0, 1);
     public BrandMatchingSearch(ItemElasticRepository repository) {
         super(repository);
     }
@@ -39,7 +38,7 @@ public class BrandMatchingSearch extends TypeMatchingAbstractSearch implements S
             return groupByCatalogue(list, brand);
         }
 
-        String type = tryFindType(words, needConvert, pageable);
+        String type = tryFindType(words, needConvert);
 
         // '_' - prevent fuzzy search for last word
         text = String.join(" ", words) + "_";
@@ -54,7 +53,7 @@ public class BrandMatchingSearch extends TypeMatchingAbstractSearch implements S
     private String tryFindBrand(List<String> words, boolean needConvert) {
         for (var iterator = words.iterator(); iterator.hasNext(); ) {
             String word = iterator.next();
-            var list = itemElasticRepository.findAllByBrandFuzzy(createQuery(word, needConvert), ONE);
+            var list = itemElasticRepository.findAllByBrandFuzzy(createQuery(word, needConvert), ONE_ELEMENT);
             if (!list.isEmpty()) {
                 iterator.remove();
                 return list.get(0).getBrand();
