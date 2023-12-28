@@ -1,0 +1,35 @@
+logging:
+  file.name: /var/local
+  level:
+    ru.shop.*: DEBUG
+    org.springframework.web: DEBUG
+  logback.rollingpolicy:
+    max-file-size: 10MB
+    total-size-cap: 70MB
+
+springdoc.version: @springdoc.version@
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 5
+      idle-timeout: 60000
+      max-lifetime: 600000
+      connection-timeout: 5000
+    driver-class-name: org.postgresql.Driver
+  elasticsearch:
+    username: ${SPRING_ELASTICSEARCH_USERNAME}
+    password: ${SPRING_ELASTICSEARCH_PASSWORD}
+    uris: ${SPRING_ELASTICSEARCH_URI}
+    socket-timeout: 1m
+    connection-timeout: 1s
+  jpa:
+    show-sql: true
+    hibernate.ddl-auto: none
+    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+
+server.port: ${SERVER_PORT}
