@@ -8,7 +8,7 @@ import ru.shop.backend.search.converter.ItemConverter;
 import ru.shop.backend.search.repository.ItemJpaRepository;
 import ru.shop.backend.search.repository.ItemElasticRepository;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import java.util.concurrent.TimeUnit;
 
 @Service

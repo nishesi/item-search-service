@@ -1,14 +1,16 @@
 package ru.shop.backend.search;
 
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -20,7 +22,6 @@ import ru.shop.backend.search.repository.ItemJpaRepository;
 import ru.shop.backend.search.service.SearchService;
 import ru.shop.backend.search.util.SimplePostgresContainer;
 
-import javax.persistence.EntityManager;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,15 +32,12 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @Testcontainers
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = RANDOM_PORT, classes = SearchApplication.class)
-@ContextConfiguration(initializers = {SearchServiceIntegrationTest.TestContextInitializer.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@EnableAutoConfiguration(exclude = {ElasticsearchRestClientAutoConfiguration.class})
 public class SearchServiceIntegrationTest {
     @Container
     static final PostgreSQLContainer<?> postgres = new SimplePostgresContainer()
             .withInitScript("SearchService-test-schema.sql");
-
-    @MockBean
-    ItemElasticRepository itemElasticRepository;
 
     @MockBean
     SearchChain searchChain;
@@ -53,6 +51,11 @@ public class SearchServiceIntegrationTest {
     @Autowired
     SearchService searchService;
 
+    @MockBean
+    ElasticsearchTemplate elasticsearchTemplate;
+    @MockBean
+    ItemElasticRepository itemElasticRepository;
+
     @BeforeAll
     static void setUp() {
         postgres.start();
@@ -63,19 +66,11 @@ public class SearchServiceIntegrationTest {
         postgres.stop();
     }
 
-    static class TestContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            TestPropertyValues.of(
-                    "spring.datasource.url=" + postgres.getJdbcUrl(),
-                    "spring.datasource.username=" + postgres.getUsername(),
-                    "spring.datasource.password=" + postgres.getPassword(),
-                    "spring.elasticsearch.rest.uris=localhost:9200",
-                    "spring.datasource.driver-class-name=org.postgresql.Driver",
-                    "spring.elasticsearch.username=",
-                    "spring.elasticsearch.password="
-//                    "server.port=8080"
-            ).applyTo(configurableApplicationContext.getEnvironment());
-        }
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
     }
 
     @Nested

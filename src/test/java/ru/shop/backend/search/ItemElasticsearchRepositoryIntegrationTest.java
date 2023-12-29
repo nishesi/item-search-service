@@ -2,13 +2,18 @@ package ru.shop.backend.search;
 
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -29,7 +34,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @Testcontainers
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = RANDOM_PORT, classes = SearchApplication.class)
-@ContextConfiguration(initializers = {ItemElasticsearchRepositoryIntegrationTest.TestContextInitializer.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ItemElasticsearchRepositoryIntegrationTest {
 
@@ -41,7 +45,7 @@ public class ItemElasticsearchRepositoryIntegrationTest {
             .withInitScript("ItemRepository-test-schema.sql");
 
     @Autowired
-    ElasticsearchRestTemplate template;
+    ElasticsearchOperations template;
 
     @Autowired
     ItemElasticRepository itemElasticRepository;
@@ -68,19 +72,14 @@ public class ItemElasticsearchRepositoryIntegrationTest {
         reindexTask.reindex();
     }
 
-    static class TestContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            TestPropertyValues.of(
-                    "spring.datasource.url=" + postgres.getJdbcUrl(),
-                    "spring.datasource.username=" + postgres.getUsername(),
-                    "spring.datasource.password=" + postgres.getPassword(),
-                    "spring.elasticsearch.rest.uris=" + elastic.getHttpHostAddress(),
-                    "spring.datasource.driver-class-name=org.postgresql.Driver",
-                    "spring.elasticsearch.username=",
-                    "spring.elasticsearch.password="
-//                    "server.port=8080"
-            ).applyTo(configurableApplicationContext.getEnvironment());
-        }
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.elasticsearch.uris", elastic::getHttpHostAddress);
+        registry.add("spring.elasticsearch.username", () -> "");
+        registry.add("spring.elasticsearch.password", () -> "");
     }
 
     @Test

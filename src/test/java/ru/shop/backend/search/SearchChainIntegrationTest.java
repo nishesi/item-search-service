@@ -1,20 +1,20 @@
 package ru.shop.backend.search;
 
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.SearchOperations;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -26,8 +26,6 @@ import ru.shop.backend.search.scheduled.ReindexTask;
 import ru.shop.backend.search.util.SimpleElasticsearchContainer;
 import ru.shop.backend.search.util.SimplePostgresContainer;
 
-import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,33 +36,35 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @Testcontainers
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = RANDOM_PORT, classes = SearchApplication.class)
-@ContextConfiguration(initializers = {SearchChainIntegrationTest.TestContextInitializer.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SearchChainIntegrationTest {
 
-    final Pageable pageable = PageRequest.of(0, 10);
     @Container
     static final ElasticsearchContainer elastic = new SimpleElasticsearchContainer();
-
     @Container
     static final PostgreSQLContainer<?> postgres = new SimplePostgresContainer()
             .withInitScript("SearchChain-test-schema.sql");
-
+    final Pageable pageable = PageRequest.of(0, 10);
     @Autowired
     ItemJpaRepository itemJpaRepository;
-
     @Autowired
     EntityManager entityManager;
-
     @Autowired
-    ElasticsearchRestTemplate elasticTemplate;
-
+    SearchOperations elasticTemplate;
     @Autowired
     SearchChain searchChain;
-
     @Autowired
     ReindexTask reindexTask;
 
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.elasticsearch.uris", elastic::getHttpHostAddress);
+        registry.add("spring.elasticsearch.username", () -> "");
+        registry.add("spring.elasticsearch.password", () -> "");
+    }
 
     @BeforeAll
     static void setUp() {
@@ -99,21 +99,6 @@ public class SearchChainIntegrationTest {
         SearchHits<ItemElastic> items = elasticTemplate.search(query, ItemElastic.class);
         assertThat(items.getTotalHits())
                 .isEqualTo(36);
-    }
-
-    static class TestContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            TestPropertyValues.of(
-                    "spring.datasource.url=" + postgres.getJdbcUrl(),
-                    "spring.datasource.username=" + postgres.getUsername(),
-                    "spring.datasource.password=" + postgres.getPassword(),
-                    "spring.elasticsearch.rest.uris=" + elastic.getHttpHostAddress(),
-                    "spring.datasource.driver-class-name=org.postgresql.Driver",
-                    "spring.elasticsearch.username=",
-                    "spring.elasticsearch.password="
-//                    "server.port=8080"
-            ).applyTo(configurableApplicationContext.getEnvironment());
-        }
     }
 
     @Nested
@@ -253,7 +238,8 @@ public class SearchChainIntegrationTest {
                                     .hasFieldOrPropertyWithValue("catalogueId", 111L);
                             assertThat(catalogue.getItems())
                                     .hasSize(1)
-                                    .allMatch(item -> item.getItemId() == 9L && item.getCatalogueId() == 111L);})
+                                    .allMatch(item -> item.getItemId() == 9L && item.getCatalogueId() == 111L);
+                        })
                         .anySatisfy(catalogue -> {
                             assertThat(catalogue)
                                     .hasFieldOrPropertyWithValue("catalogueId", 112L);
@@ -484,7 +470,7 @@ public class SearchChainIntegrationTest {
 
         //todo не работает из-за того, что в text остается найденный type
         @ParameterizedTest
-        @CsvSource({"13,smartphone","13,smartpone"})
+        @CsvSource({"13,smartphone", "13,smartpone"})
         void should_return_exact_match_by_type_and_last_word(String text, String type) {
             var result = searchChain.searchByText(text + " " + type, pageable);
 

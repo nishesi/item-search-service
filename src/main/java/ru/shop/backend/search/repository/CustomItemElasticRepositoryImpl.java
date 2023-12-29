@@ -1,53 +1,54 @@
 package ru.shop.backend.search.repository;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import lombok.RequiredArgsConstructor;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.SearchOperations;
 import org.springframework.stereotype.Component;
 import ru.shop.backend.search.model.ItemElastic;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static org.elasticsearch.index.query.Operator.AND;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.multiMatchQuery;
+import static co.elastic.clients.elasticsearch._types.query_dsl.Operator.And;
+import static org.springframework.data.elasticsearch.client.elc.Queries.matchQuery;
 
 @Component
 @RequiredArgsConstructor
 public class CustomItemElasticRepositoryImpl implements CustomItemElasticRepository {
-    private final ElasticsearchRestTemplate template;
+    private final SearchOperations template;
 
     @Override
     public List<ItemElastic> findByTextAndOptionalFilterByBrandAndType(
             String text, int textFuzziness, String brand, String type, Pageable pageable
     ) {
-        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
-        if (!text.isEmpty())
-            boolQuery.must(multiMatchQuery(text)
-                    .field("description")
-                    .field("name", 4)
-                    .fuzziness(textFuzziness)
+        BoolQuery.Builder boolQuery = new BoolQuery.Builder();
+        if (!text.isEmpty()) {
+            boolQuery.must(new MultiMatchQuery.Builder()
+                    .query(text)
+                    .fields("name^4", "description")
+                    .fuzziness(String.valueOf(textFuzziness))
                     .analyzer("russian")
-                    .operator(AND));
+                    .operator(And)
+                    .build()._toQuery());
+        }
 
         if (!brand.isEmpty())
-            boolQuery.filter(matchQuery("brand", brand));
+            boolQuery.filter(matchQuery("brand", brand, And, 1.0F)._toQuery());
 
         if (!type.isEmpty())
-            boolQuery.filter(matchQuery("type", type));
+            boolQuery.filter(matchQuery("type", type, And, 1.0F)._toQuery());
 
-        return performQuery(pageable, boolQuery);
+        return performQuery(pageable, new Query(boolQuery.build()));
     }
 
-    private List<ItemElastic> performQuery(Pageable pageable, BoolQueryBuilder boolQuery) {
-        NativeSearchQuery query = new NativeSearchQueryBuilder()
+    private List<ItemElastic> performQuery(Pageable pageable, Query boolQuery) {
+        NativeQuery query = new NativeQueryBuilder()
                 .withQuery(boolQuery)
                 .withPageable(pageable)
                 .build();
