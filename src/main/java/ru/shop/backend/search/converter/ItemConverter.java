@@ -23,7 +23,7 @@ public class ItemConverter {
                         item.getImage(),
                         item.getItemId(),
                         item.getType()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public ItemElastic toItemElastic(ItemEntity entity) {

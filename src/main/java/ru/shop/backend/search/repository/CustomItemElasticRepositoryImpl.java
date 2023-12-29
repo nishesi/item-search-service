@@ -55,6 +55,6 @@ public class CustomItemElasticRepositoryImpl implements CustomItemElasticReposit
         SearchHits<ItemElastic> result = template.search(query, ItemElastic.class);
         return result.getSearchHits().stream()
                 .map(SearchHit::getContent)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

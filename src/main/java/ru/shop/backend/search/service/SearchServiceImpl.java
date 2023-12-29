@@ -61,7 +61,7 @@ public class SearchServiceImpl implements SearchService {
         List<Long> foundItemIds = result.stream()
                 .flatMap(category -> category.getItems().stream())
                 .map(ItemElastic::getItemId)
-                .collect(Collectors.toList());
+                .toList();
         return itemJpaRepository.findAllByRegionIdAndIdIn(regionId, foundItemIds);
     }
 
@@ -69,11 +69,11 @@ public class SearchServiceImpl implements SearchService {
         var catalogueIds = items.stream()
                 .map(ItemWithPrice::getCatalogueId)
                 .distinct()
-                .collect(Collectors.toList());
+                .toList();
         Set<String> uniqueUrls = new HashSet<>();
         return catalogueJpaRepository.findAllWithParentByIdIn(catalogueIds)
                 .stream()
                 .filter(c -> uniqueUrls.add(c.getUrl()))
-                .collect(Collectors.toList());
+                .toList();
     }
 }

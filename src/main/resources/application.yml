@@ -7,8 +7,6 @@ logging:
     max-file-size: 10MB
     total-size-cap: 70MB
 
-springdoc.version: @springdoc.version@
-
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL}
@@ -33,3 +31,5 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQL10Dialect
 
 server.port: ${SERVER_PORT}
+springdoc:
+  version: "@springdoc.version@"

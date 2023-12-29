@@ -26,7 +26,7 @@ public class SearchUtils {
                             items,
                             brand);
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public static Optional<List<CatalogueElastic>> findExactMatching(List<ItemElastic> list, List<String> words, String brand) {

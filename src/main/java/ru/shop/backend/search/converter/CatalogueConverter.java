@@ -16,6 +16,6 @@ public class CatalogueConverter {
                         "/cat/" + c.getUrl() + (brand.isBlank() ? "" : "/brands/" + brand),
                         "/cat/" + c.getParentUrl(),
                         c.getImage()))
-                .collect(Collectors.toList());
+                .toList();
     }
 }
