@@ -12,8 +12,8 @@ public interface CatalogueJpaRepository extends JpaRepository<CatalogueEntity, L
     @Query(value = "select distinct       " +
             "c.name,                      " +
             "cp.name as parentName,      " +
-            "c.realcatname as url ,       " +
-            "cp.realcatname as parentUrl," +
+            "c.url,       " +
+            "cp.url as parentUrl," +
             "c.image                      " +
             "from catalogue as c join catalogue cp" +
             "   on cp.catalogue_id  = c.parent_id " +

@@ -1,36 +1,45 @@
+drop table if exists item_sku;
+drop table if exists remain;
+drop table if exists item;
+drop table if exists catalogue;
+drop table if exists brand;
+
+create table catalogue
+(
+    catalogue_id bigserial primary key,
+    url          varchar not null,
+    image        varchar not null,
+    parent_id    bigint  not null references catalogue (catalogue_id),
+    name         varchar not null
+);
+
+create table brand
+(
+    brand_id bigserial primary key,
+    name     varchar
+);
+
 create table item
 (
-    item_id      bigint,
-    catalogue_id bigint,
-    brand_id     bigint,
+    item_id      bigserial primary key,
+    catalogue_id bigint references catalogue (catalogue_id),
+    brand_id     bigint references brand (brand_id),
     name         varchar,
     description  varchar,
-    itemurl      varchar,
+    url          varchar,
     type         varchar,
-
-    i            varchar,
-    brand        varchar,
-    catalogue    varchar
+    image        varchar
 );
 
 create table item_sku
 (
-    item_id bigint,
-    sku     varchar
+    item_id bigint  not null references item (item_id) on delete cascade,
+    sku     varchar not null unique
 );
 
 create table remain
 (
-    item_id   bigint,
-    region_id bigint,
-    price     bigint
-);
-
-create table catalogue
-(
-    catalogue_id bigint,
-    realcatname  varchar,
-    image        varchar,
-    parent_id    bigint,
-    name         varchar
+    item_id   bigint references item (item_id) on delete cascade,
+    region_id bigint not null,
+    price     bigint not null
 );

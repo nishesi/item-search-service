@@ -344,7 +344,7 @@ public class SearchChainIntegrationTest {
         void should_return_if_elasticsearch_not_updated_by_sku() {
             String sku = "100002";
             int inserted = entityManager.createNativeQuery("insert into item values " +
-                            "(18, 113, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image', 'Honor', 'USA')")
+                            "(18, 113, 1014, 'MagicBook', 'description_1', '/item_url2', 'notebook', 'some_image')")
                     .executeUpdate();
             assertThat(inserted)
                     .isOne();
@@ -449,8 +449,8 @@ public class SearchChainIntegrationTest {
             var result = searchChain.searchByText(text + " " + brand, pageable);
 
             assertThat(result)
-                    .hasSize(1)
-                    .allSatisfy(catalogue -> {
+                    .hasSize(2)
+                    .anySatisfy(catalogue -> {
                         assertThat(catalogue)
                                 .hasFieldOrPropertyWithValue("catalogueId", 113L);
                         assertThat(catalogue.getItems())
@@ -458,6 +458,15 @@ public class SearchChainIntegrationTest {
                                 .allSatisfy(item -> assertThat(item)
                                         .hasFieldOrPropertyWithValue("itemId", 12L)
                                         .hasFieldOrPropertyWithValue("catalogueId", 113L));
+                    })
+                    .anySatisfy(catalogue -> {
+                        assertThat(catalogue)
+                                .hasFieldOrPropertyWithValue("catalogueId", 101L);
+                        assertThat(catalogue.getItems())
+                                .hasSize(1)
+                                .allSatisfy(item -> assertThat(item)
+                                        .hasFieldOrPropertyWithValue("itemId", 14L)
+                                        .hasFieldOrPropertyWithValue("catalogueId", 101L));
                     });
         }
 

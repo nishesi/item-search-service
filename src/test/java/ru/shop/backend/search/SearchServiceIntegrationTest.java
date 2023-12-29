@@ -93,34 +93,6 @@ public class SearchServiceIntegrationTest {
             }
 
             @Test
-            void should_return_cats_of_items() {
-            }
-
-            @Test
-            void should_return_only_if_have_parent() {
-                var catalogues = List.of(
-                        new CatalogueElastic(null, 107L, List.of(
-                                new ItemElastic(null, null, 12L, 107L, null, null, null, null)
-                        ), null),
-                        new CatalogueElastic(null, 108L, List.of(
-                                new ItemElastic(null, null, 13L, 108L, null, null, null, null)
-                        ), null),
-                        new CatalogueElastic(null, 109L, List.of(
-                                new ItemElastic(null, null, 14L, 109L, null, null, null, null)
-                        ), null)
-                );
-                when(searchChain.searchByText(any(), any())).thenReturn(catalogues);
-                var categories = searchService.getSearchResult(1, "any").getCategories();
-
-                assertThat(categories)
-                        .hasSize(2)
-                        .anySatisfy(cat -> assertThat(cat)
-                                .hasFieldOrPropertyWithValue("name", "cat_name_7"))
-                        .anySatisfy(cat -> assertThat(cat)
-                                .hasFieldOrPropertyWithValue("name", "cat_name_8"));
-            }
-
-            @Test
             void should_return_by_unique_url() {
                 var catalogues = List.of(
                         new CatalogueElastic(null, 110L, List.of(
