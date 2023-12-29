@@ -8,9 +8,8 @@ import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestCli
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -36,6 +35,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @EnableAutoConfiguration(exclude = {ElasticsearchRestClientAutoConfiguration.class})
 public class SearchServiceIntegrationTest {
     @Container
+    @ServiceConnection
     static final PostgreSQLContainer<?> postgres = new SimplePostgresContainer()
             .withInitScript("SearchService-test-schema.sql");
 
@@ -64,13 +64,6 @@ public class SearchServiceIntegrationTest {
     @AfterAll
     static void destroy() {
         postgres.stop();
-    }
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
     }
 
     @Nested

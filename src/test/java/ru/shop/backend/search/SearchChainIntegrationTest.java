@@ -8,13 +8,12 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchOperations;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -40,10 +39,14 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 public class SearchChainIntegrationTest {
 
     @Container
+    @ServiceConnection
     static final ElasticsearchContainer elastic = new SimpleElasticsearchContainer();
+
     @Container
+    @ServiceConnection
     static final PostgreSQLContainer<?> postgres = new SimplePostgresContainer()
             .withInitScript("SearchChain-test-schema.sql");
+
     final Pageable pageable = PageRequest.of(0, 10);
     @Autowired
     ItemJpaRepository itemJpaRepository;
@@ -55,16 +58,6 @@ public class SearchChainIntegrationTest {
     SearchChain searchChain;
     @Autowired
     ReindexTask reindexTask;
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.elasticsearch.uris", elastic::getHttpHostAddress);
-        registry.add("spring.elasticsearch.username", () -> "");
-        registry.add("spring.elasticsearch.password", () -> "");
-    }
 
     @BeforeAll
     static void setUp() {
