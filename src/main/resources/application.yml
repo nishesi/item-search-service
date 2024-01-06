@@ -1,8 +1,8 @@
 logging:
   file.name: /var/local
   level:
-    ru.shop.*: DEBUG
-    org.springframework.web: DEBUG
+    ru.shop.*: INFO
+    org.springframework.web: INFO
   logback.rollingpolicy:
     max-file-size: 10MB
     total-size-cap: 70MB

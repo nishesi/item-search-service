@@ -1,5 +1,6 @@
 package ru.shop.backend.search.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import ru.shop.backend.search.model.ItemEntity;
@@ -7,7 +8,6 @@ import ru.shop.backend.search.model.ItemWithPrice;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 public interface ItemJpaRepository extends JpaRepository<ItemEntity, Long> {
     @Query(value = """
@@ -33,8 +33,8 @@ public interface ItemJpaRepository extends JpaRepository<ItemEntity, Long> {
                                    from item_sku
                                    where sku = :sku)) i
                 inner join catalogue c using(catalogue_id)
-                    inner join brand b using (brand_id)
-            """, nativeQuery = true)
+                    inner join brand b using (brand_id)""",
+            nativeQuery = true)
     Optional<ItemEntity> findBySku(String sku);
 
     @Query(value = """
@@ -43,7 +43,8 @@ public interface ItemJpaRepository extends JpaRepository<ItemEntity, Long> {
                    b.name as brand
             from item i
                 inner join catalogue c using(catalogue_id)
-                    inner join brand b using (brand_id)
-            """, nativeQuery = true)
-    Stream<ItemEntity> streamAllBy();
+                    inner join brand b using (brand_id)""",
+            countQuery = "select count(*) from item",
+            nativeQuery = true)
+    List<ItemEntity> findListBy(Pageable pageable);
 }

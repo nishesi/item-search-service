@@ -17,6 +17,7 @@ import ru.shop.backend.search.util.SimpleElasticsearchContainer;
 import ru.shop.backend.search.util.SimplePostgresContainer;
 
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -62,7 +63,7 @@ public class ItemElasticsearchRepositoryIntegrationTest {
 
     @Test
     @Order(0)
-    void reindex() {
+    void reindex() throws ExecutionException, InterruptedException {
         reindexTask.reindex();
     }
 

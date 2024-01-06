@@ -8,7 +8,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Setter;
 
+@Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,7 +23,6 @@ public class CatalogueEntity {
     private String name;
     @Column(name = "parent_id")
     private Long parentId;
-    @Column(name = "realcatname")
     private String url;
     private String image;
 }

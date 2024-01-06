@@ -26,6 +26,7 @@ import ru.shop.backend.search.util.SimpleElasticsearchContainer;
 import ru.shop.backend.search.util.SimplePostgresContainer;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,7 +74,7 @@ public class SearchChainIntegrationTest {
 
     @Test
     @Order(0)
-    void reindex() {
+    void reindex() throws ExecutionException, InterruptedException {
         // wait until scheduled reindex task finishes
         reindexTask.reindex();
     }
