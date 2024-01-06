@@ -43,3 +43,4 @@ create table remain
     region_id bigint not null,
     price     bigint not null
 );
+alter table remain add constraint uniq_item_reg unique (item_id, region_id);
